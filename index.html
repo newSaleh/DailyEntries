@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مقارنة الموردين - الهرم التجارية</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a2332; min-height: 100vh; }
+
+header { background: #1a3a5c; color: #fff; padding: 14px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+header h1 { font-size: 17px; font-weight: 700; }
+header span { font-size: 12px; color: #a8c4e0; }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 18px 14px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.card { background: #fff; border-radius: 10px; border: 1.5px solid #d0dcea; overflow: hidden; }
+.card-header { background: #1a3a5c; color: #fff; padding: 9px 13px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.card-body { padding: 11px; }
+
+textarea { width: 100%; height: 120px; border: 1.5px solid #d0dcea; border-radius: 6px; padding: 7px 9px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; resize: vertical; direction: rtl; background: #fafcff; color: #1a2332; line-height: 1.6; }
+textarea:focus { outline: none; border-color: #2e6da4; }
+textarea::placeholder { color: #aab4c0; }
+
+.file-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 7px; }
+.file-btn { display: inline-flex; align-items: center; gap: 5px; background: #e8f1fa; border: 1.5px solid #2e6da4; color: #1a3a5c; border-radius: 6px; padding: 5px 11px; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.file-btn:hover { background: #d0e4f5; }
+input[type=file] { display: none; }
+.file-status { font-size: 11px; color: #2e6da4; font-weight: 600; }
+
+.actions { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+.btn { border-radius: 7px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; border: none; transition: all 0.15s; }
+.btn-primary { background: #1a3a5c; color: #fff; }
+.btn-primary:hover { background: #224e7a; }
+.btn-outline { background: #fff; color: #1a3a5c; border: 1.5px solid #1a3a5c; }
+.btn-outline:hover { background: #e8f1fa; }
+.btn-green { background: #fff; color: #1a6e3a; border: 1.5px solid #27ae60; }
+.btn-green:hover { background: #eafaf1; }
+.btn-red { background: #fff; color: #8b2020; border: 1.5px solid #d9534f; margin-right: auto; }
+.btn-red:hover { background: #fff0f0; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.sum-card { background: #fff; border-radius: 8px; padding: 12px 14px; border-right: 4px solid #2e6da4; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.sum-card.green { border-right-color: #27ae60; }
+.sum-card.yellow { border-right-color: #e6a817; }
+.sum-card.red { border-right-color: #c0392b; }
+.sum-card.gray { border-right-color: #7f8c8d; }
+.sum-card label { font-size: 10.5px; color: #6b7a8d; display: block; margin-bottom: 3px; }
+.sum-card .val { font-size: 16px; font-weight: 700; color: #1a2332; font-variant-numeric: lining-nums; }
+
+.table-wrap { background: #fff; border-radius: 10px; border: 1.5px solid #d0dcea; overflow: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: #1a3a5c; color: #fff; }
+thead th { padding: 10px 12px; text-align: center; font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+tbody tr { border-bottom: 1px solid #e8eef5; transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody td { padding: 7px 10px; text-align: center; vertical-align: middle; }
+
+.row-match  { background: #f0fbf4; }
+.row-diff   { background: #fffbec; }
+.row-sys    { background: #f3f7fb; }
+.row-branch { background: #fff5f0; }
+
+/* Drag & Drop */
+tbody tr { cursor: default; }
+tbody tr.dragging { opacity: 0.4; }
+tbody tr.drag-over { border-top: 3px solid #2e6da4; }
+.drag-handle { cursor: grab; color: #aab4c0; font-size: 16px; padding: 0 6px; user-select: none; }
+.drag-handle:hover { color: #1a3a5c; }
+tbody tr.dragging .drag-handle { cursor: grabbing; }
+
+.badge { display: inline-block; padding: 2px 7px; border-radius: 9px; font-size: 11px; font-weight: 700; }
+.badge-match  { background: #d4edda; color: #155724; }
+.badge-diff   { background: #fff3cd; color: #856404; }
+.badge-sys    { background: #d1ecf1; color: #0c5460; }
+.badge-branch { background: #f8d7da; color: #721c24; }
+
+.diff-neg { color: #c0392b; font-weight: 700; }
+.diff-pos { color: #27ae60; font-weight: 700; }
+
+td[contenteditable="true"] { cursor: text; outline: none; }
+td[contenteditable="true"]:focus { background: #fff9e6 !important; box-shadow: inset 0 0 0 2px #e6a817; border-radius: 3px; }
+.num-cell { font-variant-numeric: lining-nums; direction: ltr; }
+
+.del-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 4px; opacity: 0.4; transition: opacity 0.15s; }
+.del-btn:hover { opacity: 1; background: #fdecea; }
+
+.msg { text-align: center; padding: 36px 20px; color: #7f8c8d; font-size: 13.5px; }
+.msg .icon { font-size: 32px; margin-bottom: 8px; display: block; }
+
+.notify { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; z-index: 999; }
+.notify.err { background: #fff0f0; color: #8b2020; border: 1.5px solid #d9534f; }
+.notify.ok  { background: #eafaf1; color: #1a6e3a; border: 1.5px solid #27ae60; }
+
+.db-section { background: #fff; border-radius: 10px; border: 1.5px solid #d0dcea; padding: 14px; margin-bottom: 14px; }
+.db-section h3 { font-size: 13px; color: #1a3a5c; margin-bottom: 8px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.db-status { font-size: 12px; color: #27ae60; font-weight: 600; }
+.db-status.empty { color: #aab4c0; }
+.db-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.legend { display: flex; gap: 13px; flex-wrap: wrap; margin-top: 10px; font-size: 11px; }
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+.spinner { display: none; width: 17px; height: 17px; border: 3px solid #a8c4e0; border-top-color: #1a3a5c; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media print {
+  header, .cards, .actions, .db-section, .legend, .del-btn, .drag-handle, th:first-child, td:first-child { display: none !important; }
+  .summary { display: grid !important; }
+  body { background: #fff; }
+  .table-wrap { box-shadow: none; border: 1px solid #ccc; }
+}
+@media (max-width: 600px) {
+  thead th, tbody td { padding: 6px 5px; font-size: 11.5px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏢 مقارنة الموردين اليومية</h1>
+  <span id="dateLabel"></span>
+</header>
+
+<div class="container">
+  <div class="notify" id="notify"></div>
+
+  <!-- قاعدة الموردين -->
+  <div class="db-section">
+    <h3>🗂️ قاعدة أسماء الموردين
+      <span class="db-status empty" id="dbStatus">لا توجد قاعدة محفوظة</span>
+      <span id="dbFetchStatus" style="font-size:11px;color:#7f8c8d;margin-right:6px"></span>
+    </h3>
+
+    <!-- رابط مباشر -->
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <input id="mapUrl" type="url" dir="ltr"
+        style="flex:1;min-width:220px;padding:6px 10px;border:1.5px solid #d0dcea;border-radius:6px;font-size:12px;background:#fafcff"
+        placeholder="https://raw.githubusercontent.com/.../suppliers.csv">
+      <button class="btn btn-outline btn-sm" onclick="fetchFromUrl()">🔗 جلب من الرابط</button>
+      <button class="btn btn-outline btn-sm" onclick="saveUrl()">💾 حفظ الرابط</button>
+    </div>
+    <div style="font-size:11px;color:#7f8c8d;margin-bottom:10px;line-height:1.6">
+      ألصق رابط الملف المباشر (GitHub raw / Google Drive). سيُحفظ الرابط ويُجلب تلقائياً عند كل فتح للصفحة.
+    </div>
+
+    <div class="db-btns">
+      <label class="file-btn" for="mapFile">📂 رفع ملف محلي</label>
+      <input type="file" id="mapFile" accept=".csv,.xlsx,.xls,.tsv,.txt">
+      <button class="btn btn-outline btn-sm" onclick="togglePaste()">✏️ لصق نصي</button>
+      <button class="btn btn-sm" style="background:#fff;color:#8b2020;border:1.5px solid #d9534f" onclick="clearDB()">🗑️ حذف القاعدة</button>
+    </div>
+    <textarea id="mapPaste" style="display:none;margin-top:8px;height:80px" placeholder="SupplierCode&#9;SystemName&#9;AliasA&#9;AliasB&#10;302&#9;شركة نما العربية&#9;نماء&#9;نما"></textarea>
+    <button id="savePasteBtn" onclick="savePaste()" style="display:none;margin-top:6px" class="btn btn-outline btn-sm">💾 حفظ</button>
+  </div>
+
+  <!-- بطاقات الإدخال -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-header">🖥️ بيانات النظام</div>
+      <div class="card-body">
+        <textarea id="sysText" placeholder="الصق جدول النظام هنا&#10;&#10;SupplierCode  SupplierName  TotalAmount&#10;0302  شركة نما ..."></textarea>
+        <div class="file-row">
+          <label class="file-btn" for="sysFile">📂 رفع CSV/Excel</label>
+          <input type="file" id="sysFile" accept=".csv,.xlsx,.xls,.tsv,.txt">
+          <span class="file-status" id="sysFileStatus"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📱 رسالة الفرع</div>
+      <div class="card-body">
+        <textarea id="branchText" placeholder="الصق رسالة الفرع كما هي (أي صيغة)"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- أزرار -->
+  <div class="actions">
+    <button class="btn btn-primary" onclick="run()">⚡ تحليل وعرض <div class="spinner" id="spinner"></div></button>
+    <button class="btn btn-outline" onclick="exportExcel()">📥 Excel</button>
+    <button class="btn btn-green"   onclick="exportPDF()">🖨️ PDF</button>
+    <button class="btn btn-red"     onclick="resetAll()">🗑️ مسح</button>
+  </div>
+
+  <!-- ملخص -->
+  <div class="summary" id="summary" style="display:none">
+    <div class="sum-card">        <label>إجمالي النظام</label>   <div class="val" id="s-sys">—</div></div>
+    <div class="sum-card">        <label>إجمالي الفرع</label>    <div class="val" id="s-branch">—</div></div>
+    <div class="sum-card green">  <label>✅ متطابق</label>         <div class="val" id="s-match">—</div></div>
+    <div class="sum-card yellow"> <label>⚠️ فيه فرق</label>        <div class="val" id="s-diff">—</div></div>
+    <div class="sum-card gray">   <label>نظام فقط</label>         <div class="val" id="s-sysonly">—</div></div>
+    <div class="sum-card red">    <label>فرع فقط</label>          <div class="val" id="s-branchonly">—</div></div>
+  </div>
+
+  <!-- الجدول -->
+  <div class="table-wrap">
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th style="width:4%"></th>
+          <th style="width:30%">اسم المورد</th>
+          <th style="width:11%">رقم المورد</th>
+          <th style="width:17%">مبلغ النظام</th>
+          <th style="width:17%">مبلغ الفرع</th>
+          <th style="width:21%">الفرق / الحالة</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody">
+        <tr><td colspan="6" class="msg"><span class="icon">📋</span>أدخل البيانات ثم اضغط "تحليل وعرض"</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="legend" id="legend" style="display:none">
+    <div class="legend-item"><div class="legend-dot" style="background:#f0fbf4;border:1px solid #27ae60"></div>متطابق</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fffbec;border:1px solid #e6a817"></div>فيه فرق</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f3f7fb;border:1px solid #2e6da4"></div>نظام فقط</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fff5f0;border:1px solid #e67e22"></div>فرع فقط</div>
+    <div class="legend-item" style="margin-right:auto;color:#aab4c0;font-size:11px">☰ اسحب لتغيير الترتيب • انقر للتعديل</div>
+  </div>
+</div>
+
+<script>
+// ===================== إشعارات =====================
+function notify(msg, type='ok') {
+  const el = document.getElementById('notify');
+  el.textContent = (type==='ok'?'✅ ':'⚠️ ') + msg;
+  el.className = 'notify ' + type;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.display='none', 3000);
+}
+
+// ===================== قاعدة الموردين (localStorage + URL) =====================
+const DB_KEY      = 'supplierMap_v2';
+const DB_URL_KEY  = 'supplierMapUrl_v1';
+const DB_TIME_KEY = 'supplierMapTime_v1';
+
+function saveMapToDB(text, fromUrl=false) {
+  try {
+    localStorage.setItem(DB_KEY, text);
+    localStorage.setItem(DB_TIME_KEY, new Date().toISOString());
+    updateDBStatus();
+  } catch(e) { notify('فشل الحفظ: '+e.message,'err'); }
+}
+function loadMapFromDB() { try { return localStorage.getItem(DB_KEY)||''; } catch(e) { return ''; } }
+function clearDB() {
+  if (!confirm('حذف قاعدة الموردين والرابط المحفوظ؟')) return;
+  [DB_KEY, DB_URL_KEY, DB_TIME_KEY].forEach(k=>localStorage.removeItem(k));
+  document.getElementById('mapUrl').value='';
+  // تصفير الـ input حتى يمكن رفع نفس الملف مجدداً
+  const fi = document.getElementById('mapFile');
+  fi.value='';
+  updateDBStatus(); notify('تم الحذف');
+}
+function updateDBStatus() {
+  const raw  = loadMapFromDB();
+  const url  = localStorage.getItem(DB_URL_KEY)||'';
+  const time = localStorage.getItem(DB_TIME_KEY)||'';
+  const el   = document.getElementById('dbStatus');
+  const fs   = document.getElementById('dbFetchStatus');
+
+  if (raw.trim()) {
+    const n = raw.trim().split('\n').filter(l=>l.trim()&&!/suppliercode|رقم|كود/i.test(l)).length;
+    el.textContent = `✔ محفوظة (${n} مورد)`; el.className='db-status';
+    if (time) fs.textContent = `• آخر تحديث: ${new Date(time).toLocaleString('ar-SA')}`;
+  } else { el.textContent='لا توجد قاعدة محفوظة'; el.className='db-status empty'; fs.textContent=''; }
+
+  if (url) document.getElementById('mapUrl').value = url;
+}
+
+function saveUrl() {
+  const url = document.getElementById('mapUrl').value.trim();
+  if (!url) { notify('أدخل رابطاً أولاً','err'); return; }
+  localStorage.setItem(DB_URL_KEY, url);
+  notify('تم حفظ الرابط — سيُستخدم تلقائياً عند كل فتح');
+}
+
+async function fetchFromUrl(silent=false) {
+  const url = document.getElementById('mapUrl').value.trim() || localStorage.getItem(DB_URL_KEY)||'';
+  if (!url) { if(!silent) notify('لا يوجد رابط محفوظ','err'); return; }
+
+  // تحويل روابط Google Drive إلى رابط تحميل مباشر
+  let fetchUrl = url;
+  const gdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (gdMatch) fetchUrl = `https://drive.google.com/uc?export=download&id=${gdMatch[1]}`;
+
+  const fs = document.getElementById('dbFetchStatus');
+  fs.textContent = '⏳ جاري الجلب...';
+  try {
+    const res = await fetch(fetchUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (!text.trim()) throw new Error('الملف فارغ');
+    localStorage.setItem(DB_URL_KEY, url);
+    saveMapToDB(text);
+    if (!silent) notify('تم تحديث القاعدة من الرابط ✔');
+  } catch(e) {
+    fs.textContent = '';
+    if (!silent) notify('فشل الجلب: ' + e.message + ' — تأكد من أن الرابط عام وقابل للوصول', 'err');
+  }
+}
+
+function togglePaste() {
+  const t=document.getElementById('mapPaste'), b=document.getElementById('savePasteBtn');
+  const show = t.style.display==='none';
+  t.style.display = show?'block':'none';
+  b.style.display = show?'inline-flex':'none';
+}
+function savePaste() {
+  const t=document.getElementById('mapPaste').value.trim();
+  if(!t){notify('لا يوجد نص','err');return;}
+  saveMapToDB(t); notify('تم حفظ القاعدة');
+}
+
+// جلب تلقائي عند التحميل إن وُجد رابط محفوظ
+window.addEventListener('load', () => {
+  const url = localStorage.getItem(DB_URL_KEY);
+  if (url) {
+    document.getElementById('mapUrl').value = url;
+    fetchFromUrl(true); // صامت — لا يُظهر إشعار فشل عند مشاكل الشبكة
+  }
+});
+
+// ===================== قراءة الملفات =====================
+function readExcel(file) {
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array'});res(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]],{FS:'\t'}));}catch(err){rej(err);}};
+    r.onerror=()=>rej(); r.readAsArrayBuffer(file);
+  });
+}
+async function getFileText(file) {
+  if(file.name.match(/\.xlsx?$/i)) return await readExcel(file);
+  return await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=()=>rej();r.readAsText(file,'UTF-8');});
+}
+
+document.getElementById('sysFile').addEventListener('click', function(){ this.value=''; });
+document.getElementById('sysFile').addEventListener('change',async function(){
+  if(!this.files[0]) return;
+  document.getElementById('sysText').value = await getFileText(this.files[0]);
+  document.getElementById('sysFileStatus').textContent = '✔ '+this.files[0].name;
+});
+document.getElementById('mapFile').addEventListener('click', function(){ this.value=''; });
+document.getElementById('mapFile').addEventListener('change',async function(){
+  if(!this.files[0]) return;
+  saveMapToDB(await getFileText(this.files[0]));
+  notify('تم حفظ القاعدة: '+this.files[0].name);
+});
+
+// ===================== تحويل الأرقام العربية =====================
+function toWestern(s) {
+  return s.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+}
+
+// ===================== Parser الرسالة (5 صيغ) =====================
+function parseBranch(raw) {
+  const rows = [];
+  const seen = new Set(); // لتجنب التكرار
+
+  for (let line of raw.split('\n')) {
+    line = toWestern(line).trim();
+    // إزالة أي إيموجي أو رمز في بداية السطر (يشمل 🔹🔸✅♦️⬅️ وغيرها)
+    line = line.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\ufe0f🔹🔸♦️✅✔️❌💢🌺💐🅱️⚡💫🌀]+\s*/u, '');
+    if (!line) continue;
+
+    let name=null, amt=null;
+
+    // صيغة 3: عدد[دحك] _ اسم    رقم (⬅️ أُزيلت مسبقاً)
+    let m = line.match(/^\d+\s*[دحك]\s*[_\-]\s*(.+?)\s{2,}([\d,\.]+)\s*$/);
+    if (!m) m = line.match(/⬅️\s*\d+\s*[دحك]\s*[_\-]\s*(.+?)\s{2,}([\d,\.]+)\s*$/);
+    if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
+
+    // صيغة 4: اسم/مبلغ/عددD  (المبلغ وسط) - بعد إزالة الإيموجي
+    if (!name) {
+      m = line.match(/^(.+?)\s*\/\s*([\d,\.]+)\s*\/\s*\d+\s*[dDد]/i);
+      if (m) { name=m[1].trim(); amt=cleanAmt(m[2],true); }
+    }
+
+    // صيغة 5: اسم-عدد[دحك](رقم) - بعد إزالة الإيموجي
+    if (!name) {
+      m = line.match(/^(.+?)\s*-\s*\d+[دحك]\s*[\(\[]([\d,\.]+)[\)\]]/);
+      if (m) { name=m[1].trim(); amt=cleanAmt(m[2],true); }
+    }
+
+    // صيغة 2: اسم. عدد[دحك]⬅️رقم (بعد إزالة الإيموجي من البداية)
+    if (!name) {
+      m = line.match(/^(.+?)\s*\.?\s*\d*[دحك]⬅️([\d,]+)/);
+      if (m) { name=m[1].trim().replace(/\.+$/,'').replace(/\s+/g,' '); amt=cleanAmt(m[2]); }
+    }
+
+    // صيغة 1: اسم عدد[دحك]/رقم (بعد إزالة ✅)
+    if (!name) {
+      m = line.match(/^(.+?)\s+\d+[دحك]\s*[\/]([\d,]+)/);
+      if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
+    }
+
+    if (name && amt != null && amt > 0) {
+      const key = name+'|'+amt;
+      if (!seen.has(key)) { seen.add(key); rows.push({name, amount:amt}); }
+    }
+  }
+  return rows;
+}
+
+function cleanAmt(s, dotThousands=false) {
+  s = s.replace(/,/g,'');
+  // إن كانت نقطة آلاف (13.224 -> 13224)
+  if (dotThousands && s.includes('.') && s.split('.').pop().length===3) s=s.replace('.','');
+  const n = parseFloat(s);
+  return isNaN(n)?null:n;
+}
+
+// ===================== Parser النظام =====================
+function parseSys(raw) {
+  const rows=[];
+  for (const line of raw.trim().split('\n')) {
+    const p=line.trim().split(/\t|,/).map(s=>s.trim());
+    if(p.length<2||/suppliercode|رقم|كود/i.test(p[0])) continue;
+    if(p.length>=3){const a=parseFloat(p[2].replace(/,/g,''));if(!isNaN(a))rows.push({code:p[0].replace(/^0+/,'')||p[0],name:p[1],amount:a});}
+    else{const a=parseFloat(p[1].replace(/,/g,''));if(!isNaN(a))rows.push({code:'',name:p[0],amount:a});}
+  }
+  return rows;
+}
+
+// ===================== Parser قاعدة الأسماء =====================
+function parseMap(raw) {
+  // map[norm(alias)] = [ {code, systemName}, ... ]  ← قائمة وليس قيمة واحدة
+  const map={};
+  for (const line of raw.trim().split('\n')) {
+    const p=line.trim().split(/\t|,/).map(s=>s.trim());
+    if(p.length<2||/suppliercode|رقم|كود/i.test(p[0])) continue;
+    const code=p[0].replace(/^0+/,'')||p[0];
+    const entry={code, systemName:p[1]};
+    const addAlias = key => {
+      const k=norm(key);
+      if(!k) return;
+      if(!map[k]) map[k]=[];
+      // لا نكرر نفس الكود
+      if(!map[k].find(e=>e.code===code)) map[k].push(entry);
+    };
+    for(let i=1;i<p.length;i++) if(p[i]) addAlias(p[i]);
+    if(code) addAlias(code);
+  }
+  return map;
+}
+
+function norm(s) {
+  return s
+    .replace(/[\u064B-\u065F]/g,'')      // تشكيل
+    .replace(/[أإآ]/g,'ا')
+    .replace(/ة/g,'ه')
+    .replace(/ى/g,'ي')
+    .replace(/\s*[-–—]\s*/g,' ')         // شرطات مع مسافاتها → مسافة
+    .replace(/[\.،,،؛;:]+/g,' ')         // نقاط وفواصل → مسافة
+    .replace(/\s+/g,' ')
+    .toLowerCase()
+    .trim();
+}
+
+// ===================== تنسيق الأرقام (صحيحة) =====================
+const fmtNum = n => n==null?'—':Math.round(n).toLocaleString('en-US');
+
+// ===================== الجدول =====================
+let tableData=[];
+
+function run() {
+  const sp=document.getElementById('spinner'); sp.style.display='inline-block';
+  setTimeout(()=>{ try{_run();}catch(e){notify(e.message,'err');} sp.style.display='none'; },30);
+}
+
+function _run() {
+  const sysRaw=document.getElementById('sysText').value.trim();
+  const branchRaw=document.getElementById('branchText').value.trim();
+  if(!sysRaw&&!branchRaw){notify('أدخل بيانات النظام أو رسالة الفرع','err');return;}
+
+  const sysRows=sysRaw?parseSys(sysRaw):[];
+  const branchRows=branchRaw?parseBranch(branchRaw):[];
+
+  const sysById={},sysByName={};
+  for(const r of sysRows){
+    if(r.code) sysById[r.code]=r;
+    sysByName[norm(r.name)]=r;
+  }
+
+  // فهرسة القاعدة: نربط كل alias برقم المورد في النظام
+  // المصدر الأول والأخير للربط — لا نعتمد على بحث جزئي تلقائي
+  const aliasMap = parseMap(loadMapFromDB());
+
+  const rows=[];
+  const usedCodes=new Set();
+
+  for(const br of branchRows){
+    const nb = norm(br.name);
+    let sr = null;
+
+    // 1) قاعدة البيانات — alias قد يقابل أكثر من مورد، نجرب كلهم
+    if(aliasMap[nb]){
+      for(const info of aliasMap[nb]){
+        // أولاً: بالكود المباشر
+        sr = sysById[info.code] || null;
+        // ثانياً: باسم النظام من القاعدة (إن اختلف الكود في ملف اليوم)
+        if(!sr) sr = sysByName[norm(info.systemName)] || null;
+        if(sr) break; // وجدنا — نتوقف
+      }
+    }
+
+    // 2) مطابقة حرفية دقيقة (بعد التطبيع الخفيف) باسم النظام مباشرة
+    if(!sr) sr = sysByName[nb] || null;
+
+    // لا بحث جزئي تلقائي — إن لم يُوجد في القاعدة أو مطابقة دقيقة
+    // يُعامَل كـ "فرع فقط" ويظهر باللون البرتقالي للمراجعة اليدوية
+
+    if(sr){
+      usedCodes.add(sr.code);
+      const diff=br.amount-sr.amount;
+      rows.push({name:sr.name,code:sr.code,sysAmt:sr.amount,branchAmt:br.amount,diff,status:Math.abs(diff)<0.5?'match':'diff'});
+    } else {
+      rows.push({name:br.name,code:'',sysAmt:null,branchAmt:br.amount,diff:null,status:'branch'});
+    }
+  }
+  for(const r of sysRows){
+    if(!usedCodes.has(r.code)) rows.push({name:r.name,code:r.code,sysAmt:r.amount,branchAmt:null,diff:null,status:'sys'});
+  }
+
+  const ord={diff:0,sys:1,branch:2,match:3};
+  rows.sort((a,b)=>ord[a.status]-ord[b.status]);
+  tableData=rows;
+  renderTable(rows);
+  renderSummary(rows);
+}
+
+const clsMap={match:'row-match',diff:'row-diff',sys:'row-sys',branch:'row-branch'};
+function badge(s){const t={match:'✅ متطابق',diff:'⚠️ فرق',sys:'📋 نظام فقط',branch:'📱 فرع فقط'};return`<span class="badge badge-${s}">${t[s]}</span>`;}
+
+function diffCell(r){
+  if(r.status==='diff'){const s=r.diff>0?'+':'';const c=r.diff>0?'diff-pos':'diff-neg';return`<span class="${c}">${s}${fmtNum(r.diff)}</span> ${badge('diff')}`;}
+  if(r.status==='sys')   return `<span class="diff-neg">-${fmtNum(r.sysAmt)}</span> ${badge('sys')}`;
+  if(r.status==='branch') return `<span class="diff-pos">+${fmtNum(r.branchAmt)}</span> ${badge('branch')}`;
+  return badge(r.status);
+}
+
+function renderRow(r,i){
+  return`<tr class="${clsMap[r.status]}" data-idx="${i}" draggable="true">
+    <td><span class="drag-handle" title="اسحب لإعادة الترتيب">☰</span> <button class="del-btn" onclick="deleteRow(${i})" title="حذف">✕</button></td>
+    <td contenteditable="true" style="text-align:right" oninput="cellEdit(${i},'name',this)">${r.name}</td>
+    <td contenteditable="true" class="num-cell" oninput="cellEdit(${i},'code',this)">${r.code||'—'}</td>
+    <td contenteditable="true" class="num-cell" oninput="cellEditNum(${i},'sysAmt',this)">${r.sysAmt!=null?fmtNum(r.sysAmt):'—'}</td>
+    <td contenteditable="true" class="num-cell" oninput="cellEditNum(${i},'branchAmt',this)">${r.branchAmt!=null?fmtNum(r.branchAmt):'—'}</td>
+    <td id="dc-${i}">${diffCell(r)}</td>
+  </tr>`;
+}
+
+function renderTable(rows){
+  const tb=document.getElementById('resultBody');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="6" class="msg"><span class="icon">🔍</span>لا توجد نتائج</td></tr>';return;}
+  tb.innerHTML=rows.map((r,i)=>renderRow(r,i)).join('');
+  initDrag();
+  document.getElementById('legend').style.display='flex';
+}
+
+function deleteRow(i){tableData.splice(i,1);renderTable(tableData);renderSummary(tableData);}
+
+function cellEdit(i,field,el){tableData[i][field]=el.innerText.trim();}
+
+function cellEditNum(i,field,el){
+  const raw=el.innerText.replace(/,/g,'').trim();
+  const n=parseFloat(raw);
+  tableData[i][field]=isNaN(n)?null:n;
+  refreshDiff(i);renderSummary(tableData);
+}
+
+function refreshDiff(i){
+  const r=tableData[i];
+  if(r.sysAmt!=null&&r.branchAmt!=null){r.diff=r.branchAmt-r.sysAmt;r.status=Math.abs(r.diff)<0.5?'match':'diff';}
+  else if(r.sysAmt==null&&r.branchAmt!=null){r.status='branch';r.diff=null;}
+  else{r.status='sys';r.diff=null;}
+  const tr=document.querySelector(`tr[data-idx="${i}"]`);
+  if(tr){tr.className=clsMap[r.status];document.getElementById(`dc-${i}`).innerHTML=diffCell(r);}
+}
+
+function renderSummary(rows){
+  const sT=rows.filter(r=>r.sysAmt!=null).reduce((s,r)=>s+r.sysAmt,0);
+  const bT=rows.filter(r=>r.branchAmt!=null).reduce((s,r)=>s+r.branchAmt,0);
+  document.getElementById('s-sys').textContent=fmtNum(sT);
+  document.getElementById('s-branch').textContent=fmtNum(bT);
+  document.getElementById('s-match').textContent=rows.filter(r=>r.status==='match').length+' مورد';
+  document.getElementById('s-diff').textContent=rows.filter(r=>r.status==='diff').length+' مورد';
+  document.getElementById('s-sysonly').textContent=rows.filter(r=>r.status==='sys').length+' مورد';
+  document.getElementById('s-branchonly').textContent=rows.filter(r=>r.status==='branch').length+' مورد';
+  document.getElementById('summary').style.display='grid';
+}
+
+// ===================== Drag & Drop لإعادة الترتيب =====================
+let dragSrc=null;
+
+function initDrag(){
+  document.querySelectorAll('#resultBody tr[draggable]').forEach(tr=>{
+    tr.addEventListener('dragstart',e=>{dragSrc=tr;tr.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    tr.addEventListener('dragend',()=>{dragSrc&&dragSrc.classList.remove('dragging');document.querySelectorAll('#resultBody tr').forEach(t=>t.classList.remove('drag-over'));});
+    tr.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';tr.classList.add('drag-over');});
+    tr.addEventListener('dragleave',()=>tr.classList.remove('drag-over'));
+    tr.addEventListener('drop',e=>{
+      e.preventDefault();
+      if(!dragSrc||dragSrc===tr) return;
+      const fromIdx=parseInt(dragSrc.dataset.idx);
+      const toIdx=parseInt(tr.dataset.idx);
+      const moved=tableData.splice(fromIdx,1)[0];
+      tableData.splice(toIdx,0,moved);
+      renderTable(tableData);
+      renderSummary(tableData);
+    });
+  });
+}
+
+// ===================== تصدير =====================
+function exportExcel(){
+  if(!tableData.length){notify('لا توجد بيانات','err');return;}
+  const statusAr={match:'متطابق',diff:'فيه فرق',sys:'نظام فقط',branch:'فرع فقط'};
+  const data=[['اسم المورد','رقم المورد','مبلغ النظام','مبلغ الفرع','الفرق','الحالة']];
+  for(const r of tableData) data.push([r.name,r.code||'',r.sysAmt??'',r.branchAmt??'',r.diff!=null?Math.round(r.diff):'',statusAr[r.status]]);
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:35},{wch:13},{wch:15},{wch:15},{wch:13},{wch:13}];
+  XLSX.utils.book_append_sheet(wb,ws,'مقارنة الموردين');
+  XLSX.writeFile(wb,`مقارنة_الموردين_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function exportPDF(){ if(!tableData.length){notify('لا توجد بيانات','err');return;} window.print(); }
+
+function resetAll(){
+  ['sysText','branchText'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('sysFileStatus').textContent='';
+  document.getElementById('sysFile').value='';
+  document.getElementById('resultBody').innerHTML='<tr><td colspan="6" class="msg"><span class="icon">📋</span>أدخل البيانات ثم اضغط "تحليل وعرض"</td></tr>';
+  document.getElementById('summary').style.display='none';
+  document.getElementById('legend').style.display='none';
+  tableData=[];
+}
+
+// ===================== تهيئة =====================
+document.getElementById('dateLabel').textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+updateDBStatus();
+</script>
+</body>
+</html>
