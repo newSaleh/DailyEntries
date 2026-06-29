@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Editor</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+  .container { max-width: 640px; margin: 0 auto; }
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f0f6fc;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #7d8590;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #7d8590;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  input, select {
+    width: 100%;
+    padding: 10px 14px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #e6edf3;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: #388bfd; }
+  input[type="password"] { letter-spacing: 2px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .btn {
+    width: 100%;
+    padding: 11px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 4px;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: #238636; color: #fff; }
+  .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+  .btn-danger { background: #da3633; color: #fff; }
+  .status {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+  .status.success { background: #0f2d1a; border: 1px solid #238636; color: #3fb950; display: block; }
+  .status.error { background: #2d0f0f; border: 1px solid #da3633; color: #f85149; display: block; }
+  .status.info { background: #0d1f3c; border: 1px solid #388bfd; color: #79c0ff; display: block; }
+  .file-content {
+    width: 100%;
+    min-height: 220px;
+    padding: 12px 14px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #e6edf3;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+    direction: ltr;
+    text-align: left;
+  }
+  .file-content:focus { border-color: #388bfd; }
+  .meta {
+    font-size: 11px;
+    color: #7d8590;
+    margin-top: 8px;
+  }
+  .meta span { color: #388bfd; }
+  .commits-list { list-style: none; }
+  .commit-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .commit-item:last-child { border-bottom: none; }
+  .commit-msg { font-size: 13px; color: #e6edf3; flex: 1; }
+  .commit-sha { font-family: monospace; font-size: 11px; color: #7d8590; }
+  .commit-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    color: #e6edf3;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .commit-btn:hover { background: #30363d; }
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #7d8590;
+    margin-bottom: 14px;
+  }
+  .divider { height: 1px; background: #21262d; margin: 6px 0 16px; }
+  #setupSection { }
+  #editorSection { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>GitHub Editor</h1>
+  <p class="subtitle">newSaleh/DailyEntries</p>
+
+  <!-- Setup -->
+  <div class="card" id="setupSection">
+    <div class="section-title">الإعداد</div>
+    <label>Personal Access Token</label>
+    <input type="password" id="tokenInput" placeholder="ghp_..." autocomplete="off" />
+    <div style="margin-top:12px">
+      <button class="btn btn-primary" onclick="connect()">اتصال</button>
+    </div>
+    <div class="status" id="setupStatus"></div>
+  </div>
+
+  <!-- Editor -->
+  <div id="editorSection">
+
+    <div class="card">
+      <div class="section-title">تحديد الملف</div>
+      <div class="row">
+        <div>
+          <label>Branch</label>
+          <select id="branchSelect" onchange="clearEditor()">
+            <option value="main">main</option>
+          </select>
+        </div>
+        <div>
+          <label>اسم الملف</label>
+          <input type="text" id="filePathInput" value="index.html" placeholder="مثال: index.html" />
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn btn-secondary" onclick="loadFile()">تحميل الملف</button>
+      </div>
+      <div class="status" id="loadStatus"></div>
+    </div>
+
+    <div class="card" id="editorCard" style="display:none">
+      <div class="section-title">محتوى الملف</div>
+      <textarea class="file-content" id="fileContent"></textarea>
+      <div class="meta" id="fileMeta"></div>
+      <div style="margin-top:14px; display:flex; gap:10px;">
+        <button class="btn btn-primary" style="flex:1" onclick="saveFile()">رفع التعديلات</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="createNewFile()">إنشاء ملف جديد</button>
+      </div>
+      <div class="status" id="saveStatus"></div>
+    </div>
+
+    <div class="card" id="newFileCard" style="display:none">
+      <div class="section-title">ملف جديد</div>
+      <label>مسار الملف الجديد</label>
+      <input type="text" id="newFilePath" placeholder="مثال: data/records.csv" />
+      <div style="margin-top:10px">
+        <label>المحتوى</label>
+        <textarea class="file-content" id="newFileContent" style="min-height:120px"></textarea>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button class="btn btn-primary" style="flex:1" onclick="uploadNewFile()">رفع</button>
+        <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('newFileCard').style.display='none'">إلغاء</button>
+      </div>
+      <div class="status" id="newFileStatus"></div>
+    </div>
+
+    <div class="card" id="historyCard" style="display:none">
+      <div class="section-title">آخر التعديلات (للرجوع للنسخة السابقة)</div>
+      <ul class="commits-list" id="commitsList"></ul>
+      <div class="status" id="revertStatus"></div>
+    </div>
+
+    <div style="text-align:center; margin-top:8px;">
+      <button class="btn btn-secondary" style="width:auto; padding: 8px 20px; font-size:13px;" onclick="disconnect()">قطع الاتصال</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const REPO = 'newSaleh/DailyEntries';
+let TOKEN = '';
+let currentSha = '';
+let currentPath = '';
+
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status ' + type;
+}
+
+async function ghFetch(endpoint, options = {}) {
+  const res = await fetch(`https://api.github.com${endpoint}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${TOKEN}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'خطأ في GitHub API');
+  return data;
+}
+
+async function connect() {
+  TOKEN = document.getElementById('tokenInput').value.trim();
+  if (!TOKEN) return showStatus('setupStatus', 'أدخل التوكن أولاً', 'error');
+  showStatus('setupStatus', 'جاري الاتصال...', 'info');
+  try {
+    await ghFetch(`/repos/${REPO}`);
+    const branches = await ghFetch(`/repos/${REPO}/branches`);
+    const sel = document.getElementById('branchSelect');
+    sel.innerHTML = branches.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+    document.getElementById('setupSection').style.display = 'none';
+    document.getElementById('editorSection').style.display = 'block';
+  } catch(e) {
+    showStatus('setupStatus', 'فشل الاتصال: ' + e.message, 'error');
+  }
+}
+
+async function loadFile() {
+  const path = document.getElementById('filePathInput').value.trim();
+  const branch = document.getElementById('branchSelect').value;
+  if (!path) return showStatus('loadStatus', 'أدخل اسم الملف', 'error');
+  showStatus('loadStatus', 'جاري التحميل...', 'info');
+  try {
+    const data = await ghFetch(`/repos/${REPO}/contents/${path}?ref=${branch}`);
+    currentSha = data.sha;
+    currentPath = path;
+    const content = atob(data.content.replace(/\n/g, ''));
+    document.getElementById('fileContent').value = content;
+    document.getElementById('fileMeta').innerHTML = `آخر تعديل: <span>${data.sha.substring(0,7)}</span> · الحجم: <span>${(data.size/1024).toFixed(1)} KB</span>`;
+    document.getElementById('editorCard').style.display = 'block';
+    document.getElementById('loadStatus').className = 'status';
+    await loadHistory(path, branch);
+  } catch(e) {
+    showStatus('loadStatus', 'فشل التحميل: ' + e.message, 'error');
+  }
+}
+
+async function saveFile() {
+  const content = document.getElementById('fileContent').value;
+  const branch = document.getElementById('branchSelect').value;
+  const timestamp = new Date().toLocaleString('ar-SA', {timeZone:'Asia/Riyadh'});
+  showStatus('saveStatus', 'جاري الرفع...', 'info');
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(content)));
+    const result = await ghFetch(`/repos/${REPO}/contents/${currentPath}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message: `تحديث ${currentPath} — ${timestamp}`,
+        content: encoded,
+        sha: currentSha,
+        branch
+      })
+    });
+    currentSha = result.content.sha;
+    showStatus('saveStatus', '✓ تم الرفع بنجاح', 'success');
+    await loadHistory(currentPath, branch);
+  } catch(e) {
+    showStatus('saveStatus', 'فشل الرفع: ' + e.message, 'error');
+  }
+}
+
+async function loadHistory(path, branch) {
+  try {
+    const commits = await ghFetch(`/repos/${REPO}/commits?path=${path}&sha=${branch}&per_page=6`);
+    const list = document.getElementById('commitsList');
+    list.innerHTML = commits.map(c => `
+      <li class="commit-item">
+        <span class="commit-msg">${c.commit.message.substring(0,60)}</span>
+        <span class="commit-sha">${c.sha.substring(0,7)}</span>
+        <button class="commit-btn" onclick="revertToCommit('${c.sha}', '${path}')">استرجاع</button>
+      </li>
+    `).join('');
+    document.getElementById('historyCard').style.display = 'block';
+  } catch(e) {}
+}
+
+async function revertToCommit(sha, path) {
+  if (!confirm('هل تريد الرجوع لهذه النسخة؟')) return;
+  showStatus('revertStatus', 'جاري الاسترجاع...', 'info');
+  try {
+    const fileAtCommit = await ghFetch(`/repos/${REPO}/contents/${path}?ref=${sha}`);
+    document.getElementById('fileContent').value = atob(fileAtCommit.content.replace(/\n/g, ''));
+    currentSha = (await ghFetch(`/repos/${REPO}/contents/${path}?ref=${document.getElementById('branchSelect').value}`)).sha;
+    showStatus('revertStatus', 'تم تحميل النسخة القديمة — اضغط "رفع التعديلات" لتأكيدها', 'info');
+  } catch(e) {
+    showStatus('revertStatus', 'فشل الاسترجاع: ' + e.message, 'error');
+  }
+}
+
+function createNewFile() {
+  document.getElementById('newFileCard').style.display = 'block';
+  document.getElementById('newFilePath').focus();
+}
+
+async function uploadNewFile() {
+  const path = document.getElementById('newFilePath').value.trim();
+  const content = document.getElementById('newFileContent').value;
+  const branch = document.getElementById('branchSelect').value;
+  if (!path) return showStatus('newFileStatus', 'أدخل مسار الملف', 'error');
+  showStatus('newFileStatus', 'جاري الرفع...', 'info');
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(content)));
+    await ghFetch(`/repos/${REPO}/contents/${path}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message: `إضافة ${path}`,
+        content: encoded,
+        branch
+      })
+    });
+    showStatus('newFileStatus', `✓ تم إنشاء ${path} بنجاح`, 'success');
+    document.getElementById('newFilePath').value = '';
+    document.getElementById('newFileContent').value = '';
+  } catch(e) {
+    showStatus('newFileStatus', 'فشل: ' + e.message, 'error');
+  }
+}
+
+function clearEditor() {
+  document.getElementById('editorCard').style.display = 'none';
+  document.getElementById('historyCard').style.display = 'none';
+  document.getElementById('loadStatus').className = 'status';
+}
+
+function disconnect() {
+  TOKEN = '';
+  currentSha = '';
+  document.getElementById('tokenInput').value = '';
+  document.getElementById('setupSection').style.display = 'block';
+  document.getElementById('editorSection').style.display = 'none';
+  document.getElementById('setupStatus').className = 'status';
+  clearEditor();
+}
+</script>
+</body>
+</html>
