@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة قاعدة الموردين</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:100vh}
+header{background:#1a3a5c;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+header h1{font-size:17px;font-weight:700}
+header a{color:#a8c4e0;font-size:12px;text-decoration:none}
+header a:hover{color:#fff}
+.container{max-width:1100px;margin:0 auto;padding:18px 14px}
+.toolbar{background:#fff;border-radius:10px;border:1.5px solid #d0dcea;padding:14px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border-radius:7px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:none;transition:all .15s}
+.btn-primary{background:#1a3a5c;color:#fff}.btn-primary:hover{background:#224e7a}
+.btn-primary:disabled{background:#aab4c0;cursor:default}
+.btn-green{background:#fff;color:#1a6e3a;border:1.5px solid #27ae60}.btn-green:hover{background:#eafaf1}
+.btn-outline{background:#fff;color:#1a3a5c;border:1.5px solid #1a3a5c}.btn-outline:hover{background:#e8f1fa}
+.btn-red{background:#fff;color:#8b2020;border:1.5px solid #d9534f}.btn-red:hover{background:#fff0f0}
+.btn-sm{padding:6px 12px;font-size:12px}
+.status{font-size:12px;color:#7f8c8d;margin-right:auto}
+.status.ok{color:#27ae60;font-weight:600}
+.status.err{color:#c0392b;font-weight:600}
+.table-wrap{background:#fff;border-radius:10px;border:1.5px solid #d0dcea;overflow:auto;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:700px}
+thead tr{background:#1a3a5c;color:#fff}
+thead th{padding:10px 12px;text-align:center;font-weight:600;white-space:nowrap}
+thead th.col-code{width:80px}
+thead th.col-name{width:220px;text-align:right}
+thead th.col-alias{min-width:120px;text-align:right}
+thead th.col-act{width:60px}
+tbody tr{border-bottom:1px solid #e8eef5}
+tbody tr:hover{background:#f8fafc}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:6px 10px;vertical-align:middle}
+.code-cell{text-align:center;font-size:12px;color:#2e6da4;font-weight:600;direction:ltr}
+td[contenteditable="true"]{cursor:text;outline:none;border-radius:4px;min-width:60px}
+td[contenteditable="true"]:focus{background:#fff9e6;box-shadow:inset 0 0 0 2px #e6a817}
+.new-row td{background:#f0fbf4}
+.alias-tags{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.tag{background:#e8f1fa;color:#1a3a5c;border-radius:12px;padding:2px 9px;font-size:11.5px;display:inline-flex;align-items:center;gap:4px}
+.tag-del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:12px;padding:0 2px;line-height:1}
+.tag-del:hover{color:#8b2020}
+.add-alias{background:none;border:1.5px dashed #2e6da4;color:#2e6da4;border-radius:12px;padding:2px 8px;font-size:11.5px;cursor:pointer;transition:all .15s}
+.add-alias:hover{background:#e8f1fa}
+.del-row{background:none;border:none;color:#c0392b;cursor:pointer;font-size:15px;padding:2px 5px;border-radius:4px;opacity:.4;transition:opacity .15s}
+.del-row:hover{opacity:1;background:#fdecea}
+.notify{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.15);display:none;z-index:9999;white-space:nowrap}
+.notify.err{background:#fff0f0;color:#8b2020;border:1.5px solid #d9534f}
+.notify.ok{background:#eafaf1;color:#1a6e3a;border:1.5px solid #27ae60}
+.search-box{padding:7px 11px;border:1.5px solid #d0dcea;border-radius:7px;font-size:13px;width:220px;direction:rtl}
+.search-box:focus{outline:none;border-color:#2e6da4}
+.spinner{display:none;width:16px;height:16px;border:2px solid #a8c4e0;border-top-color:#1a3a5c;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗂️ إدارة قاعدة الموردين</h1>
+  <a href="index.html">← العودة للمقارنة</a>
+</header>
+
+<div class="container">
+  <div class="notify" id="notify"></div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" id="saveBtn" onclick="saveToGitHub()">
+      💾 حفظ على GitHub <div class="spinner" id="spinner"></div>
+    </button>
+    <button class="btn btn-green" onclick="addRow()">➕ إضافة مورد</button>
+    <button class="btn btn-outline" onclick="loadFromGitHub()">🔄 تحديث من GitHub</button>
+    <input class="search-box" id="searchBox" placeholder="🔍 بحث..." oninput="filterTable()">
+    <span class="status" id="statusMsg">جاري التحميل...</span>
+  </div>
+
+  <div class="table-wrap">
+    <table id="suppTable">
+      <thead>
+        <tr>
+          <th class="col-code">الكود</th>
+          <th class="col-name">اسم النظام</th>
+          <th class="col-alias">الأسماء البديلة (Aliases)</th>
+          <th class="col-act"></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const GH_REPO    = 'newSaleh/DailyEntries';
+const GH_FILE    = 'suppliers';
+const GH_API     = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
+const TOKEN_KEY  = 'gh_token_v1';
+const DB_KEY     = 'supplierMap_v2';
+
+let currentSha = '';
+let allRows = []; // [{code, name, aliases:[]}]
+
+// ====== إشعارات ======
+function notify(msg, type='ok') {
+  const el = document.getElementById('notify');
+  el.textContent = (type==='ok'?'✅ ':'⚠️ ') + msg;
+  el.className = 'notify ' + type;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.style.display='none', 4000);
+}
+function setStatus(msg, cls='') {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg; el.className = 'status ' + cls;
+}
+
+// ====== Token ======
+function getToken() {
+  let t = localStorage.getItem(TOKEN_KEY)||'';
+  if (!t) {
+    t = (prompt('أدخل GitHub Personal Access Token:')||'').trim();
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+  }
+  return t;
+}
+
+// ====== تحميل من GitHub ======
+async function loadFromGitHub() {
+  setStatus('⏳ جاري التحميل...');
+  const token = getToken();
+  if (!token) { setStatus('لا يوجد token','err'); return; }
+  try {
+    const res = await fetch(GH_API + '?_=' + Date.now(), {
+      headers: {Authorization:`token ${token}`, Accept:'application/vnd.github.v3+json'},
+      cache: 'no-store'
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    currentSha = json.sha;
+    const bytes = Uint8Array.from(atob(json.content.replace(/\n/g,'')), c=>c.charCodeAt(0));
+    const csv = new TextDecoder('utf-8').decode(bytes);
+    localStorage.setItem(DB_KEY, csv);
+    parseAndRender(csv);
+    setStatus(`✔ محمّلة (${allRows.length} مورد) — ${new Date().toLocaleTimeString('ar-SA')}`, 'ok');
+  } catch(e) {
+    setStatus('فشل التحميل: '+e.message,'err');
+    if (e.message.includes('401')) localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+// ====== parse CSV ======
+function parseAndRender(csv) {
+  csv = csv.replace(/^\uFEFF/,'').replace(/\r/g,'');
+  const lines = csv.split('\n');
+  const sep = lines[0].includes('\t')?'\t':lines[0].includes(';')?';':',';
+  allRows = [];
+  for (const line of lines) {
+    const p = line.split(sep).map(s=>s.trim());
+    if (!p[0] || /^SupplierCode/i.test(p[0])) continue;
+    const code = p[0];
+    const name = p[1] || '';
+    const aliases = p.slice(2).filter(s=>s);
+    allRows.push({code, name, aliases});
+  }
+  renderTable(allRows);
+}
+
+// ====== عرض الجدول ======
+function renderTable(rows) {
+  const tb = document.getElementById('tableBody');
+  tb.innerHTML = rows.map((r,i) => `
+    <tr data-idx="${allRows.indexOf(r)}">
+      <td class="code-cell" contenteditable="true" oninput="allRows[this.closest('tr').dataset.idx].code=this.innerText.trim()">${r.code}</td>
+      <td contenteditable="true" style="text-align:right" oninput="allRows[this.closest('tr').dataset.idx].name=this.innerText.trim()">${r.name}</td>
+      <td>
+        <div class="alias-tags" id="tags-${allRows.indexOf(r)}">
+          ${r.aliases.map((a,ai)=>`
+            <span class="tag">${a}
+              <button class="tag-del" onclick="removeAlias(${allRows.indexOf(r)},${ai})" title="حذف">×</button>
+            </span>`).join('')}
+          <button class="add-alias" onclick="addAlias(${allRows.indexOf(r)})">+ إضافة</button>
+        </div>
+      </td>
+      <td><button class="del-row" onclick="deleteRow(${allRows.indexOf(r)})" title="حذف المورد">✕</button></td>
+    </tr>`).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  if (!q) { renderTable(allRows); return; }
+  renderTable(allRows.filter(r =>
+    r.code.includes(q) || r.name.toLowerCase().includes(q) ||
+    r.aliases.some(a=>a.toLowerCase().includes(q))
+  ));
+}
+
+// ====== تعديلات ======
+function removeAlias(idx, ai) {
+  allRows[idx].aliases.splice(ai, 1);
+  renderTable(allRows);
+}
+
+function addAlias(idx) {
+  const a = prompt('أدخل الاسم البديل الجديد:');
+  if (!a || !a.trim()) return;
+  const alias = a.trim();
+  if (allRows[idx].aliases.includes(alias)) { notify('الاسم موجود مسبقاً','err'); return; }
+  allRows[idx].aliases.push(alias);
+  renderTable(allRows);
+  notify(`تمت الإضافة: "${alias}"`);
+}
+
+function addRow() {
+  allRows.push({code:'', name:'', aliases:[]});
+  renderTable(allRows);
+  // فوكس على الكود الجديد
+  const rows = document.querySelectorAll('#tableBody tr');
+  const last = rows[rows.length-1];
+  if (last) last.querySelector('[contenteditable]').focus();
+}
+
+function deleteRow(idx) {
+  if (!confirm(`حذف المورد: ${allRows[idx].name || allRows[idx].code}؟`)) return;
+  allRows.splice(idx,1);
+  renderTable(allRows);
+}
+
+// ====== بناء CSV وحفظ ======
+function buildCSV() {
+  const sep = ';';
+  const header = `SupplierCode${sep}SystemName${sep}BranchAlias1${sep}BranchAlias2${sep}BranchAlias3${sep}BranchAlias4`;
+  const lines = allRows
+    .filter(r=>r.code||r.name)
+    .map(r=>[r.code, r.name, ...r.aliases].join(sep));
+  return [header, ...lines].join('\n');
+}
+
+async function saveToGitHub() {
+  if (!currentSha) { notify('حمّل البيانات أولاً','err'); return; }
+  const token = getToken();
+  if (!token) return;
+
+  const btn = document.getElementById('saveBtn');
+  const sp  = document.getElementById('spinner');
+  btn.disabled = true; sp.style.display='inline-block';
+  setStatus('⏳ جاري الحفظ...');
+
+  try {
+    const csv = buildCSV();
+    let bin=''; const enc = new TextEncoder().encode(csv);
+    for (let i=0;i<enc.length;i++) bin+=String.fromCharCode(enc[i]);
+
+    const res = await fetch(GH_API, {
+      method: 'PUT',
+      headers: {Authorization:`token ${token}`,'Content-Type':'application/json'},
+      body: JSON.stringify({
+        message: `تحديث قاعدة الموردين — ${new Date().toLocaleDateString('ar-SA')}`,
+        content: btoa(bin),
+        sha: currentSha
+      })
+    });
+    if (!res.ok) { const e=await res.json(); throw new Error(e.message||res.status); }
+    const data = await res.json();
+    currentSha = data.content.sha;
+    localStorage.setItem(DB_KEY, csv);
+    setStatus(`✔ تم الحفظ على GitHub — ${new Date().toLocaleTimeString('ar-SA')}`, 'ok');
+    notify('✔ تم حفظ القاعدة على GitHub بنجاح');
+  } catch(e) {
+    setStatus('فشل الحفظ: '+e.message,'err');
+    notify('فشل الحفظ: '+e.message,'err');
+    if (e.message.includes('401')) localStorage.removeItem(TOKEN_KEY);
+  }
+  btn.disabled=false; sp.style.display='none';
+}
+
+// ====== تحميل تلقائي ======
+loadFromGitHub();
+</script>
+</body>
+</html>
