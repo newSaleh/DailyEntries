@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الفروق المعلّقة</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:100vh}
+header{background:#1a3a5c;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+header h1{font-size:17px;font-weight:700}
+header a{color:#a8c4e0;font-size:12px;text-decoration:none;border:1px solid #a8c4e0;border-radius:6px;padding:5px 12px}
+header a:hover{color:#fff;border-color:#fff}
+.container{max-width:1100px;margin:0 auto;padding:18px 14px}
+.toolbar{background:#fff;border-radius:10px;border:1.5px solid #d0dcea;padding:12px 14px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:none;transition:all .15s}
+.btn:disabled{opacity:.5;cursor:default}
+.btn-primary{background:#1a3a5c;color:#fff}.btn-primary:hover:not(:disabled){background:#224e7a}
+.btn-red{background:#fff;color:#8b2020;border:1.5px solid #d9534f}.btn-red:hover{background:#fff0f0}
+.btn-outline{background:#fff;color:#1a3a5c;border:1.5px solid #1a3a5c}.btn-outline:hover{background:#e8f1fa}
+.count{font-size:12px;color:#7f8c8d;margin-right:auto}
+.count b{color:#1a3a5c}
+.table-wrap{background:#fff;border-radius:10px;border:1.5px solid #d0dcea;overflow:auto;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:#1a3a5c;color:#fff}
+thead th{padding:10px 12px;text-align:center;font-weight:600;font-size:12.5px;white-space:nowrap}
+tbody tr{border-bottom:1px solid #e8eef5}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:8px 11px;text-align:center;vertical-align:middle}
+.badge-diff{background:#fff3cd;color:#856404;border-radius:9px;padding:2px 7px;font-size:11px;font-weight:700}
+.badge-sys{background:#d1ecf1;color:#0c5460;border-radius:9px;padding:2px 7px;font-size:11px;font-weight:700}
+.diff-neg{color:#c0392b;font-weight:700}
+td[contenteditable="true"]{cursor:text;outline:none}
+td[contenteditable="true"]:focus{background:#fff9e6!important;box-shadow:inset 0 0 0 2px #e6a817;border-radius:3px}
+.del-btn{background:none;border:none;color:#c0392b;cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;opacity:.4;transition:opacity .15s}
+.del-btn:hover{opacity:1;background:#fdecea}
+.done-btn{background:none;border:none;color:#27ae60;cursor:pointer;font-size:16px;padding:2px 5px;border-radius:4px;opacity:.5;transition:opacity .15s}
+.done-btn:hover{opacity:1;background:#eafaf1}
+.row-resolved td{opacity:.4;text-decoration:line-through}
+.msg{text-align:center;padding:48px 20px;color:#7f8c8d;font-size:14px}
+.msg .icon{font-size:38px;margin-bottom:10px;display:block}
+.notify{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.15);display:none;z-index:9999;white-space:nowrap}
+.notify.err{background:#fff0f0;color:#8b2020;border:1.5px solid #d9534f}
+.notify.ok{background:#eafaf1;color:#1a6e3a;border:1.5px solid #27ae60}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.filter-btn{background:#fff;border:1.5px solid #d0dcea;border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;transition:all .15s;color:#6b7a8d}
+.filter-btn.active{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
+.branch-tag{background:#e8f1fa;color:#1a3a5c;border-radius:10px;padding:2px 8px;font-size:11.5px;font-weight:600}
+.days-old{font-size:11px;color:#e6a817;font-weight:600}
+.days-old.urgent{color:#c0392b}
+.spinner{display:none;width:15px;height:15px;border:2px solid #a8c4e0;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gh-status{font-size:11px;color:#7f8c8d;margin-right:4px}
+@media print{header,.toolbar,.filter-row,.del-btn,.done-btn{display:none!important}body{background:#fff}.table-wrap{box-shadow:none;border:1px solid #ccc}}
+</style>
+</head>
+<body>
+<header>
+  <h1>⏳ الفروق المعلّقة</h1>
+  <a href="index.html">← العودة للمقارنة</a>
+</header>
+<div class="container">
+  <div class="notify" id="notify"></div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" id="saveBtn" onclick="saveToGitHub()">
+      💾 حفظ على GitHub <div class="spinner" id="spinner"></div>
+    </button>
+    <button class="btn btn-outline" onclick="loadFromGitHub()">🔄 تحديث</button>
+    <button class="btn btn-red" onclick="clearResolved()">🗑️ حذف المُعوَّضة</button>
+    <button class="btn btn-outline" onclick="window.print()">🖨️ طباعة</button>
+    <span class="count" id="countMsg"></span>
+    <span class="gh-status" id="ghStatus"></span>
+  </div>
+
+  <div class="filter-row" id="filterRow"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:6%"></th>
+          <th style="width:11%">التاريخ</th>
+          <th style="width:10%">الفرع</th>
+          <th style="width:26%">اسم المورد</th>
+          <th style="width:9%">رقم المورد</th>
+          <th style="width:12%">مبلغ النظام</th>
+          <th style="width:12%">مبلغ الفرع</th>
+          <th style="width:14%">الفرق / الحالة</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const GH_REPO    = 'newSaleh/DailyEntries';
+const GH_FILE    = 'pending.json';
+const GH_API     = `https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
+const TOKEN_KEY  = 'gh_token_v1';
+
+let data = [];
+let currentSha = '';
+let filterBranch = 'all';
+let dirty = false; // هل يوجد تغييرات غير محفوظة
+
+// ====== Token ======
+function getToken() {
+  let t = localStorage.getItem(TOKEN_KEY)||'';
+  if (!t) {
+    t = (prompt('أدخل GitHub Personal Access Token:')||'').trim();
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+  }
+  return t;
+}
+
+// ====== إشعارات ======
+function notify(msg, type='ok') {
+  const el=document.getElementById('notify');
+  el.textContent=(type==='ok'?'✅ ':'⚠️ ')+msg;
+  el.className='notify '+type; el.style.display='block';
+  clearTimeout(el._t); el._t=setTimeout(()=>el.style.display='none',3500);
+}
+function setGhStatus(msg){document.getElementById('ghStatus').textContent=msg;}
+
+const fmt = n => n==null?'—':Math.round(n).toLocaleString('en-US');
+function daysSince(iso){return Math.floor((Date.now()-new Date(iso))/86400000);}
+
+// ====== تحميل من GitHub ======
+async function loadFromGitHub() {
+  setGhStatus('⏳ جاري التحميل...');
+  const token = getToken(); if(!token){setGhStatus('');return;}
+  try {
+    const res = await fetch(GH_API+'?_='+Date.now(), {
+      headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'},
+      cache:'no-store'
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    currentSha = json.sha;
+    const bytes = Uint8Array.from(atob(json.content.replace(/\n/g,'')),c=>c.charCodeAt(0));
+    data = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    // دمج أي بيانات جديدة من index.html
+    const incoming = JSON.parse(localStorage.getItem('pendingRows_v1')||'[]');
+    if(incoming.length){
+      data.push(...incoming);
+      localStorage.removeItem('pendingRows_v1');
+      await saveToGitHub(true);
+    }
+    dirty=false;
+    setGhStatus('✔ محدّث '+new Date().toLocaleTimeString('ar-SA'));
+    render();
+  } catch(e) {
+    setGhStatus('فشل: '+e.message);
+    if(e.message.includes('401'))localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+// ====== حفظ على GitHub ======
+async function saveToGitHub(silent=false) {
+  if(!currentSha&&!silent){notify('حمّل البيانات أولاً','err');return;}
+  const token=getToken(); if(!token)return;
+  const btn=document.getElementById('saveBtn');
+  const sp=document.getElementById('spinner');
+  btn.disabled=true; sp.style.display='inline-block';
+  setGhStatus('⏳ جاري الحفظ...');
+  try {
+    const json=JSON.stringify(data,null,2);
+    let bin=''; const enc=new TextEncoder().encode(json);
+    for(let i=0;i<enc.length;i++) bin+=String.fromCharCode(enc[i]);
+    const body={message:`تحديث الفروق المعلّقة — ${new Date().toLocaleDateString('ar-SA')}`,content:btoa(bin),sha:currentSha};
+    const res=await fetch(GH_API,{method:'PUT',headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){const e=await res.json();throw new Error(e.message||res.status);}
+    const d=await res.json(); currentSha=d.content.sha;
+    dirty=false;
+    setGhStatus('✔ محفوظ '+new Date().toLocaleTimeString('ar-SA'));
+    if(!silent)notify('✔ تم الحفظ على GitHub');
+  } catch(e) {
+    setGhStatus('فشل الحفظ: '+e.message);
+    if(!silent)notify('فشل الحفظ: '+e.message,'err');
+    if(e.message.includes('401'))localStorage.removeItem(TOKEN_KEY);
+  }
+  btn.disabled=false; sp.style.display='none';
+}
+
+// ====== عرض ======
+function renderFilters(){
+  const branches=[...new Set(data.map(r=>r.branch).filter(Boolean))];
+  document.getElementById('filterRow').innerHTML=
+    `<button class="filter-btn ${filterBranch==='all'?'active':''}" onclick="setFilter('all')">الكل (${data.filter(r=>!r.resolved).length})</button>`
+    +branches.map(b=>`<button class="filter-btn ${filterBranch===b?'active':''}" onclick="setFilter('${b}')">${b} (${data.filter(r=>r.branch===b&&!r.resolved).length})</button>`).join('');
+}
+function setFilter(b){filterBranch=b;render();}
+
+function render(){
+  const pending=data.filter(r=>!r.resolved).length;
+  document.getElementById('countMsg').innerHTML=`معلّق: <b>${pending}</b> — إجمالي: <b>${data.length}</b>`;
+  renderFilters();
+  const filtered=filterBranch==='all'?data:data.filter(r=>r.branch===filterBranch);
+  const tb=document.getElementById('tableBody');
+  if(!filtered.length){
+    tb.innerHTML='<tr><td colspan="8" class="msg"><span class="icon">✅</span>لا توجد فروق معلّقة</td></tr>';
+    return;
+  }
+  const sorted=[...filtered].sort((a,b)=>{
+    if(a.resolved!==b.resolved)return a.resolved?1:-1;
+    return new Date(b.addedAt)-new Date(a.addedAt);
+  });
+  tb.innerHTML=sorted.map(r=>{
+    const idx=data.indexOf(r);
+    const days=daysSince(r.addedAt);
+    const dCls=days>=3?'days-old urgent':days>=1?'days-old':'';
+    const dLbl=days===0?'اليوم':days===1?'أمس':`منذ ${days} أيام`;
+    const diff=r.sysAmt!=null&&r.brAmt!=null?r.brAmt-r.sysAmt:null;
+    return`<tr class="${r.resolved?'row-resolved':''}">
+      <td>
+        <button class="done-btn" onclick="toggleResolved(${idx})" title="${r.resolved?'إلغاء':'تم التعويض'}">${r.resolved?'↩️':'✓'}</button>
+        <button class="del-btn" onclick="deleteRow(${idx})" title="حذف">✕</button>
+      </td>
+      <td><div>${r.date||'—'}</div>${!r.resolved?`<div class="${dCls}">${dLbl}</div>`:''}</td>
+      <td><span class="branch-tag">${r.branch||'—'}</span></td>
+      <td contenteditable="true" style="text-align:right" oninput="editField(${idx},'name',this)">${r.name||''}</td>
+      <td contenteditable="true" style="direction:ltr" oninput="editField(${idx},'code',this)">${r.code||'—'}</td>
+      <td contenteditable="true" style="direction:ltr" oninput="editFieldNum(${idx},'sysAmt',this)">${r.sysAmt!=null?fmt(r.sysAmt):'—'}</td>
+      <td contenteditable="true" style="direction:ltr" oninput="editFieldNum(${idx},'brAmt',this)">${r.brAmt!=null?fmt(r.brAmt):'—'}</td>
+      <td>${diff!=null?`<span class="diff-neg">${fmt(diff)}</span> <span class="badge-diff">⚠️</span>`:'<span class="badge-sys">📋 غائب</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ====== تعديل ======
+function editField(idx,f,el){data[idx][f]=el.innerText.trim();dirty=true;}
+function editFieldNum(idx,f,el){const n=parseFloat(el.innerText.replace(/,/g,''));data[idx][f]=isNaN(n)?null:n;dirty=true;}
+function toggleResolved(idx){
+  data[idx].resolved=!data[idx].resolved;
+  if(data[idx].resolved)data[idx].resolvedAt=new Date().toLocaleDateString('ar-SA');
+  else delete data[idx].resolvedAt;
+  dirty=true; render(); saveToGitHub(true);
+  notify(data[idx].resolved?'✔ تم تعويضه':'تم إعادته للمعلّقة');
+}
+function deleteRow(idx){
+  if(!confirm(`حذف "${data[idx].name}"؟`))return;
+  data.splice(idx,1); dirty=true; render(); saveToGitHub(true);
+  notify('تم الحذف');
+}
+function clearResolved(){
+  const n=data.filter(r=>r.resolved).length;
+  if(!n){notify('لا توجد مُعوَّضة','err');return;}
+  if(!confirm(`حذف ${n} سطر مُعوَّض؟`))return;
+  data=data.filter(r=>!r.resolved); dirty=true; render(); saveToGitHub(true);
+  notify(`تم حذف ${n} سطر`);
+}
+
+// تحذير عند الخروج مع تغييرات غير محفوظة
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+
+// تحميل تلقائي
+loadFromGitHub();
+</script>
+</body>
+</html>
