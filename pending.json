@@ -8,7 +8,8 @@
     "code": "263",
     "sysAmt": 13379,
     "status": "sys",
-    "resolved": false
+    "resolved": false,
+    "brAmt": 10000
   },
   {
     "id": 1782890872465.2693,
@@ -19,6 +20,7 @@
     "code": "401",
     "sysAmt": 10140,
     "status": "sys",
-    "resolved": false
+    "resolved": true,
+    "resolvedAt": "١‏/٧‏/٢٠٢٦"
   }
 ]
