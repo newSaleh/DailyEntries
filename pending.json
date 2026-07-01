@@ -8,8 +8,9 @@
     "code": "263",
     "sysAmt": 13379,
     "status": "sys",
-    "resolved": false,
-    "brAmt": 10000
+    "resolved": true,
+    "brAmt": 10000,
+    "resolvedAt": "١‏/٧‏/٢٠٢٦"
   },
   {
     "id": 1782890872465.2693,
