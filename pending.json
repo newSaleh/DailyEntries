@@ -42,5 +42,16 @@
     "sysAmt": 18520,
     "status": "sys",
     "resolved": false
+  },
+  {
+    "id": 1783020177468.0393,
+    "branch": "الدائري",
+    "date": "١٧ محرم، ١٤٤٨ هـ",
+    "addedAt": "2026-07-02T19:22:57.468Z",
+    "name": "شركة باوارث للملابس الجاهزة",
+    "code": "115",
+    "sysAmt": 8176,
+    "status": "sys",
+    "resolved": false
   }
 ]
