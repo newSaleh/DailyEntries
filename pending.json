@@ -8,7 +8,8 @@
     "code": "115",
     "sysAmt": 8176,
     "status": "sys",
-    "resolved": false
+    "resolved": false,
+    "brAmt": 1
   },
   {
     "id": 1783020508285.3455,
