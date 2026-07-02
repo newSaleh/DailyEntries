@@ -64,5 +64,16 @@
     "sysAmt": 4068,
     "status": "sys",
     "resolved": false
+  },
+  {
+    "id": 1783020846554.5452,
+    "branch": "الفيحاء",
+    "date": "١٧ محرم، ١٤٤٨ هـ",
+    "addedAt": "2026-07-02T19:34:06.554Z",
+    "name": "شركة دار بدور للتجارة",
+    "code": "124",
+    "sysAmt": 3192,
+    "status": "sys",
+    "resolved": false
   }
 ]
