@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -20,7 +21,7 @@ header span { font-size: 12px; color: #a8c4e0; }
 .card-header { background: #1a3a5c; color: #fff; padding: 9px 13px; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
 .card-body { padding: 11px; }
 
-textarea { width: 100%; height: 120px; border: 1.5px solid #d0dcea; border-radius: 6px; padding: 7px 9px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; resize: vertical; direction: rtl; background: #fafcff; color: #1a2332; line-height: 1.6; }
+textarea { width: 100%; height: 120px; border: 1.5px solid #d0dcea; border-radius: 6px; padding: 7px 9px; font-family: ‘Segoe UI’, Arial, sans-serif; font-size: 12px; resize: vertical; direction: rtl; background: #fafcff; color: #1a2332; line-height: 1.6; }
 textarea:focus { outline: none; border-color: #2e6da4; }
 textarea::placeholder { color: #aab4c0; }
 
@@ -81,8 +82,8 @@ tbody tr.dragging .drag-handle { cursor: grabbing; }
 .diff-neg { color: #c0392b; font-weight: 700; }
 .diff-pos { color: #27ae60; font-weight: 700; }
 
-td[contenteditable="true"] { cursor: text; outline: none; }
-td[contenteditable="true"]:focus { background: #fff9e6 !important; box-shadow: inset 0 0 0 2px #e6a817; border-radius: 3px; }
+td[contenteditable=“true”] { cursor: text; outline: none; }
+td[contenteditable=“true”]:focus { background: #fff9e6 !important; box-shadow: inset 0 0 0 2px #e6a817; border-radius: 3px; }
 .num-cell { font-variant-numeric: lining-nums; direction: ltr; }
 
 .del-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 4px; opacity: 0.4; transition: opacity 0.15s; }
@@ -108,7 +109,6 @@ td[contenteditable="true"]:focus { background: #fff9e6 !important; box-shadow: i
 .spinner { display: none; width: 17px; height: 17px; border: 3px solid #a8c4e0; border-top-color: #1a3a5c; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-
 .alias-btn { background: none; border: none; color: #2e6da4; cursor: pointer; font-size: 13px; padding: 2px 4px; border-radius: 4px; opacity: 0.5; transition: opacity 0.15s; }
 .alias-btn:hover { opacity: 1; background: #e8f1fa; }
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:10000; align-items:center; justify-content:center; }
@@ -126,7 +126,6 @@ td[contenteditable="true"]:focus { background: #fff9e6 !important; box-shadow: i
 .modal-cancel { background:#fff; color:#6b7a8d; border:1.5px solid #d0dcea; border-radius:7px; padding:9px 16px; font-size:13px; cursor:pointer; }
 .modal-saving { font-size:12px; color:#2e6da4; }
 
-
 .row-check { width: 14px; height: 14px; cursor: pointer; accent-color: #1a3a5c; }
 .pending-bar { background:#fff;border-radius:10px;border:1.5px solid #e6a817;padding:12px 14px;margin-bottom:14px;display:none;gap:10px;flex-wrap:wrap;align-items:center; }
 .pending-bar label { font-size:13px;font-weight:600;color:#1a3a5c; }
@@ -136,15 +135,16 @@ td[contenteditable="true"]:focus { background: #fff9e6 !important; box-shadow: i
 .btn-yellow:hover { background:#c9920e; }
 thead th.th-check { width:3%; }
 @media print {
-  header, .cards, .actions, .db-section, .legend, .del-btn, .drag-handle, th:first-child, td:first-child { display: none !important; }
-  .summary { display: grid !important; }
-  body { background: #fff; }
-  .table-wrap { box-shadow: none; border: 1px solid #ccc; }
+header, .cards, .actions, .db-section, .legend, .del-btn, .drag-handle, th:first-child, td:first-child { display: none !important; }
+.summary { display: grid !important; }
+body { background: #fff; }
+.table-wrap { box-shadow: none; border: 1px solid #ccc; }
 }
 @media (max-width: 600px) {
-  thead th, tbody td { padding: 6px 5px; font-size: 11.5px; }
+thead th, tbody td { padding: 6px 5px; font-size: 11.5px; }
 }
 </style>
+
 </head>
 <body>
 
@@ -158,35 +158,40 @@ thead th.th-check { width:3%; }
   <div class="notify" id="notify"></div>
 
   <!-- قاعدة الموردين -->
+
   <div class="db-section">
     <h3>🗂️ قاعدة أسماء الموردين
       <span class="db-status empty" id="dbStatus">لا توجد قاعدة محفوظة</span>
       <span id="dbFetchStatus" style="font-size:11px;color:#7f8c8d;margin-right:6px"></span>
     </h3>
 
-    <!-- رابط مباشر -->
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-      <input id="mapUrl" type="url" dir="ltr"
-        style="flex:1;min-width:220px;padding:6px 10px;border:1.5px solid #d0dcea;border-radius:6px;font-size:12px;background:#fafcff"
-        placeholder="https://raw.githubusercontent.com/.../suppliers.csv">
-      <button class="btn btn-outline btn-sm" onclick="fetchFromUrl()">🔗 جلب من الرابط</button>
-      <button class="btn btn-outline btn-sm" onclick="saveUrl()">💾 حفظ الرابط</button>
-    </div>
-    <div style="font-size:11px;color:#7f8c8d;margin-bottom:10px;line-height:1.6">
-      ألصق رابط الملف المباشر (GitHub raw / Google Drive). سيُحفظ الرابط ويُجلب تلقائياً عند كل فتح للصفحة.
-    </div>
+```
+<!-- رابط مباشر -->
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+  <input id="mapUrl" type="url" dir="ltr"
+    style="flex:1;min-width:220px;padding:6px 10px;border:1.5px solid #d0dcea;border-radius:6px;font-size:12px;background:#fafcff"
+    placeholder="https://raw.githubusercontent.com/.../suppliers.csv">
+  <button class="btn btn-outline btn-sm" onclick="fetchFromUrl()">🔗 جلب من الرابط</button>
+  <button class="btn btn-outline btn-sm" onclick="saveUrl()">💾 حفظ الرابط</button>
+</div>
+<div style="font-size:11px;color:#7f8c8d;margin-bottom:10px;line-height:1.6">
+  ألصق رابط الملف المباشر (GitHub raw / Google Drive). سيُحفظ الرابط ويُجلب تلقائياً عند كل فتح للصفحة.
+</div>
 
-    <div class="db-btns">
-      <label class="file-btn" for="mapFile">📂 رفع ملف محلي</label>
-      <input type="file" id="mapFile" accept=".csv,.xlsx,.xls,.tsv,.txt">
-      <button class="btn btn-outline btn-sm" onclick="togglePaste()">✏️ لصق نصي</button>
-      <button class="btn btn-sm" style="background:#fff;color:#8b2020;border:1.5px solid #d9534f" onclick="clearDB()">🗑️ حذف القاعدة</button>
-    </div>
-    <textarea id="mapPaste" style="display:none;margin-top:8px;height:80px" placeholder="SupplierCode&#9;SystemName&#9;AliasA&#9;AliasB&#10;302&#9;شركة نما العربية&#9;نماء&#9;نما"></textarea>
-    <button id="savePasteBtn" onclick="savePaste()" style="display:none;margin-top:6px" class="btn btn-outline btn-sm">💾 حفظ</button>
+<div class="db-btns">
+  <label class="file-btn" for="mapFile">📂 رفع ملف محلي</label>
+  <input type="file" id="mapFile" accept=".csv,.xlsx,.xls,.tsv,.txt">
+  <button class="btn btn-outline btn-sm" onclick="togglePaste()">✏️ لصق نصي</button>
+  <button class="btn btn-sm" style="background:#fff;color:#8b2020;border:1.5px solid #d9534f" onclick="clearDB()">🗑️ حذف القاعدة</button>
+</div>
+<textarea id="mapPaste" style="display:none;margin-top:8px;height:80px" placeholder="SupplierCode&#9;SystemName&#9;AliasA&#9;AliasB&#10;302&#9;شركة نما العربية&#9;نماء&#9;نما"></textarea>
+<button id="savePasteBtn" onclick="savePaste()" style="display:none;margin-top:6px" class="btn btn-outline btn-sm">💾 حفظ</button>
+```
+
   </div>
 
   <!-- بطاقات الإدخال -->
+
   <div class="cards">
     <div class="card">
       <div class="card-header">🖥️ بيانات النظام</div>
@@ -200,15 +205,19 @@ thead th.th-check { width:3%; }
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-header">📱 رسالة الفرع</div>
-      <div class="card-body">
-        <textarea id="branchText" placeholder="الصق رسالة الفرع كما هي (أي صيغة)"></textarea>
-      </div>
-    </div>
+```
+<div class="card">
+  <div class="card-header">📱 رسالة الفرع</div>
+  <div class="card-body">
+    <textarea id="branchText" placeholder="الصق رسالة الفرع كما هي (أي صيغة)"></textarea>
+  </div>
+</div>
+```
+
   </div>
 
   <!-- أزرار -->
+
   <div class="actions">
     <button class="btn btn-primary" onclick="run()">⚡ تحليل وعرض <div class="spinner" id="spinner"></div></button>
     <button class="btn btn-outline" onclick="exportExcel()">📥 Excel</button>
@@ -217,6 +226,7 @@ thead th.th-check { width:3%; }
   </div>
 
   <!-- شريط الفروق المعلّقة -->
+
   <div class="pending-bar" id="pendingBar">
     <label>نقل المحدّد إلى الفروق المعلّقة:</label>
     <input type="text" id="pendingBranch" placeholder="اسم الفرع">
@@ -226,6 +236,7 @@ thead th.th-check { width:3%; }
   </div>
 
   <!-- ملخص -->
+
   <div class="summary" id="summary" style="display:none">
     <div class="sum-card">        <label>إجمالي النظام</label>   <div class="val" id="s-sys">—</div></div>
     <div class="sum-card">        <label>إجمالي الفرع</label>    <div class="val" id="s-branch">—</div></div>
@@ -236,6 +247,7 @@ thead th.th-check { width:3%; }
   </div>
 
   <!-- الجدول -->
+
   <div class="table-wrap">
     <table id="resultTable">
       <thead>
@@ -463,7 +475,7 @@ function parseSys(raw) {
   const rows=[];
   for (const line of raw.trim().split('\n')) {
     const p=line.trim().split(/\t|,/).map(s=>s.trim());
-    if(p.length<2||/suppliercode|رقم|كود/i.test(p[0])) continue;
+    if(p.length<2||/suppliercode|المورد|اسم المورد|رقم|كود/i.test(p[0])) continue;
     if(p.length>=3){const a=parseFloat(p[2].replace(/,/g,''));if(!isNaN(a))rows.push({code:p[0].replace(/^0+/,'')||p[0],name:p[1],amount:a});}
     else{const a=parseFloat(p[1].replace(/,/g,''));if(!isNaN(a))rows.push({code:'',name:p[0],amount:a});}
   }
@@ -485,7 +497,7 @@ function parseMap(raw) {
   const map={};
   for (const line of raw.trim().split('\n')) {
     const p = line.trim().split(sep).map(s=>s.trim());
-    if(p.length<2||/suppliercode|رقم|كود/i.test(p[0])) continue;
+    if(p.length<2||/suppliercode|المورد|اسم المورد|رقم|كود/i.test(p[0])) continue;
     const code=p[0].replace(/^0+/,'')||p[0];
     const entry={code, systemName:p[1]};
     const addAlias = key => {
@@ -875,6 +887,7 @@ updateDBStatus();
 </script>
 
 <!-- Modal Alias -->
+
 <div class="modal-overlay" id="aliasModal">
   <div class="modal">
     <h3>🔗 إضافة اسم بديل (Alias)</h3>
