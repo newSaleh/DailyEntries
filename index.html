@@ -473,11 +473,22 @@ function cleanAmt(s, dotThousands=false) {
 // ===================== Parser النظام =====================
 function parseSys(raw) {
   const rows=[];
-  for (const line of raw.trim().split('\n')) {
-    const p=line.trim().split(/\t|,/).map(s=>s.trim());
-    if(p.length<2||/suppliercode|المورد|اسم المورد|رقم|كود/i.test(p[0])) continue;
-    if(p.length>=3){const a=parseFloat(p[2].replace(/,/g,''));if(!isNaN(a))rows.push({code:p[0].replace(/^0+/,'')||p[0],name:p[1],amount:a});}
-    else{const a=parseFloat(p[1].replace(/,/g,''));if(!isNaN(a))rows.push({code:'',name:p[0],amount:a});}
+  const lines = raw.trim().split('\n');
+  for (const line of lines) {
+    // الفصل على tab دائماً (الأضمن مع أرقام فيها فواصل آلاف)
+    const p = line.trim().split('\t').map(s=>s.trim());
+    if(p.length<2) continue;
+    if(/suppliercode|المورد|اسم المورد|رقم|كود/i.test(p[0])) continue;
+    let code='', name='', amount=null;
+    if(p.length>=3){
+      code = p[0]; name = p[1];
+      amount = parseFloat(p[2].replace(/,/g,''));
+    } else {
+      code = ''; name = p[0];
+      amount = parseFloat(p[1].replace(/,/g,''));
+    }
+    if(!isNaN(amount) && amount>0)
+      rows.push({code: code.replace(/^0+/,'')||code, name, amount});
   }
   return rows;
 }
