@@ -162,6 +162,13 @@ function parseAndRender(csv) {
     const aliases = p.slice(2).filter(s=>s);
     allRows.push({code, name, aliases});
   }
+  allRows.sort((a,b) => {
+    const na = parseInt(a.code,10), nb = parseInt(b.code,10);
+    if (isNaN(na) && isNaN(nb)) return a.code.localeCompare(b.code);
+    if (isNaN(na)) return 1;
+    if (isNaN(nb)) return -1;
+    return na - nb;
+  });
   renderTable(allRows);
 }
 

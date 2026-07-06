@@ -102,6 +102,14 @@ td[contenteditable=“true”]:focus { background: #fff9e6 !important; box-shado
 .db-status.empty { color: #aab4c0; }
 .db-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
+.tab-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.tab-item { display: flex; align-items: center; gap: 6px; background: #fff; border: 1.5px solid #d0dcea; border-radius: 8px 8px 0 0; padding: 7px 12px; font-size: 12.5px; font-weight: 600; color: #5a6b80; cursor: pointer; white-space: nowrap; user-select: none; }
+.tab-item.active { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+.tab-item .tab-close { background: none; border: none; color: inherit; opacity: .6; cursor: pointer; font-size: 12px; padding: 0 2px; line-height: 1; }
+.tab-item .tab-close:hover { opacity: 1; }
+.tab-add { background: #e8f1fa; border: 1.5px dashed #2e6da4; color: #1a3a5c; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.tab-add:hover { background: #d0e4f5; }
+
 .legend { display: flex; gap: 13px; flex-wrap: wrap; margin-top: 10px; font-size: 11px; }
 .legend-item { display: flex; align-items: center; gap: 4px; }
 .legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
@@ -189,6 +197,9 @@ thead th, tbody td { padding: 6px 5px; font-size: 11.5px; }
 ```
 
   </div>
+
+  <!-- تبويبات الفروع -->
+  <div class="tab-bar" id="tabBar"></div>
 
   <!-- بطاقات الإدخال -->
 
@@ -539,6 +550,84 @@ function norm(s) {
 // ===================== تنسيق الأرقام (صحيحة) =====================
 const fmtNum = n => n==null?'—':Math.round(n).toLocaleString('en-US');
 
+// ===================== إدارة الفروع (Tabs) =====================
+function newTabObj(id,label){ return { id, label, sysText:'', branchText:'', tableData:[] }; }
+
+let tabs = [ newTabObj(1,'فرع 1') ];
+let activeTabId = 1;
+let nextTabId = 2;
+
+function getActiveTab(){ return tabs.find(t=>t.id===activeTabId); }
+
+function syncActiveTab(){
+  const t = getActiveTab();
+  if(!t) return;
+  t.sysText    = document.getElementById('sysText').value;
+  t.branchText = document.getElementById('branchText').value;
+  t.tableData  = tableData;
+}
+
+function loadTab(t){
+  document.getElementById('sysText').value    = t.sysText;
+  document.getElementById('branchText').value = t.branchText;
+  document.getElementById('sysFileStatus').textContent = '';
+  document.getElementById('sysFile').value = '';
+  tableData = t.tableData;
+  renderTable(tableData);
+  if (tableData.length) { renderSummary(tableData); }
+  else { document.getElementById('summary').style.display='none'; document.getElementById('legend').style.display='none'; }
+}
+
+function switchTab(id){
+  if (id===activeTabId) return;
+  syncActiveTab();
+  activeTabId = id;
+  loadTab(getActiveTab());
+  renderTabs();
+}
+
+function addTab(){
+  syncActiveTab();
+  const t = newTabObj(nextTabId, 'فرع '+nextTabId);
+  nextTabId++;
+  tabs.push(t);
+  activeTabId = t.id;
+  loadTab(t);
+  renderTabs();
+}
+
+function removeTab(id, ev){
+  ev.stopPropagation();
+  if (tabs.length<=1) { notify('لا يمكن حذف آخر فرع','err'); return; }
+  const t = tabs.find(x=>x.id===id);
+  const hasData = t && (t.sysText.trim() || t.branchText.trim() || t.tableData.length);
+  if (hasData && !confirm(`حذف "${t.label}" وكل بياناته؟`)) return;
+  const idx = tabs.findIndex(x=>x.id===id);
+  tabs.splice(idx,1);
+  if (activeTabId===id) {
+    const next = tabs[idx] || tabs[idx-1] || tabs[0];
+    activeTabId = next.id;
+    loadTab(next);
+  }
+  renderTabs();
+}
+
+function renameTab(id, ev){
+  ev.stopPropagation();
+  const t = tabs.find(x=>x.id===id);
+  const name = prompt('اسم الفرع:', t.label);
+  if (name && name.trim()) { t.label = name.trim(); renderTabs(); }
+}
+
+function renderTabs(){
+  const bar = document.getElementById('tabBar');
+  bar.innerHTML = tabs.map(t=>`
+    <div class="tab-item ${t.id===activeTabId?'active':''}" onclick="switchTab(${t.id})" ondblclick="renameTab(${t.id},event)" title="نقر مزدوج لإعادة التسمية">
+      <span>${t.label}</span>
+      ${tabs.length>1?`<button class="tab-close" onclick="removeTab(${t.id},event)" title="حذف الفرع">✕</button>`:''}
+    </div>`).join('') + `<button class="tab-add" onclick="addTab()">+ فرع جديد</button>`;
+}
+
 // ===================== الجدول =====================
 let tableData=[];
 
@@ -604,6 +693,7 @@ function _run() {
   const ord={diff:0,sys:1,branch:2,match:3};
   rows.sort((a,b)=>ord[a.status]-ord[b.status]);
   tableData=rows;
+  getActiveTab().tableData = tableData;
   renderTable(rows);
   renderSummary(rows);
 }
@@ -714,6 +804,8 @@ function resetAll(){
   document.getElementById('summary').style.display='none';
   document.getElementById('legend').style.display='none';
   tableData=[];
+  const t=getActiveTab();
+  if (t) { t.sysText=''; t.branchText=''; t.tableData=[]; }
 }
 
 
@@ -741,7 +833,7 @@ function openAlias(i) {
 
 function closeAliasModal() { document.getElementById('aliasModal').classList.remove('open'); }
 
-document.getElementById('aliasModal').addEventListener('click', function(e){ if(e.target===this) closeAliasModal(); });
+document.addEventListener('click', function(e){ if(e.target.id==='aliasModal') closeAliasModal(); });
 document.addEventListener('keydown', e => {
   if (e.key==='Escape') closeAliasModal();
   if (e.key==='Enter' && document.getElementById('aliasModal').classList.contains('open')) { e.preventDefault(); saveAlias(); }
@@ -895,6 +987,7 @@ updatePendingBadge();
 // ===================== تهيئة =====================
 document.getElementById('dateLabel').textContent=new Date().toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 updateDBStatus();
+renderTabs();
 </script>
 
 <!-- Modal Alias -->
