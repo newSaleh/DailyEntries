@@ -457,7 +457,7 @@ function parseBranch(raw) {
 
     // صيغة 1: اسم عدد[دحك]/رقم (بعد إزالة ✅)
     if (!name) {
-      m = line.match(/^(.+?)\s+\d+[دحك]\s*[\/]([\d,]+)/);
+      m = line.match(/^(.+?)\s*\d+[دحك]\s*[\/]([\d,]+)/);
       if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
     }
 
