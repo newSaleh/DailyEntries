@@ -426,8 +426,8 @@ function parseBranch(raw) {
 
   for (let line of raw.split('\n')) {
     line = toWestern(line).trim();
-    // إزالة أي إيموجي أو رمز في بداية السطر (يشمل 🔹🔸✅♦️⬅️ وغيرها)
-    line = line.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\ufe0f🔹🔸♦️✅✔️❌💢🌺💐🅱️⚡💫🌀]+\s*/u, '');
+    // إزالة أي رمز/إيموجي/علامة في بداية السطر (أي شيء ليس حرفاً أو رقماً)
+    line = line.replace(/^[^\p{L}\p{N}]+/u, '');
     if (!line) continue;
 
     let name=null, amt=null;
