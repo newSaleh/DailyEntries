@@ -481,13 +481,32 @@ function cleanAmt(s, dotThousands=false) {
 function parseSys(raw) {
   const rows=[];
   const lines = raw.trim().split('\n');
-  for (const line of lines) {
+  if(!lines.length) return rows;
+
+  // كشف صف العناوين وتحديد أعمدة "رمز المورد" / "اسم المورد" / "المبلغ" بالاسم
+  // بحيث لا يهم ترتيب الأعمدة أو وجود أعمدة إضافية بينها لاحقاً
+  let codeIdx=-1, nameIdx=-1, amtIdx=-1, dataStart=0;
+  const header = lines[0].trim().split('\t').map(s=>s.trim());
+  if (header.length>1) {
+    header.forEach((h,i)=>{
+      if (codeIdx<0 && /رمز|كود|suppliercode/i.test(h)) codeIdx=i;
+      else if (nameIdx<0 && /اسم/i.test(h)) nameIdx=i;
+      else if (amtIdx<0 && /مبلغ|amount|total/i.test(h)) amtIdx=i;
+    });
+    if (codeIdx>=0 || nameIdx>=0 || amtIdx>=0) dataStart=1;
+  }
+
+  for (let li=dataStart; li<lines.length; li++) {
     // الفصل على tab دائماً (الأضمن مع أرقام فيها فواصل آلاف)
-    const p = line.trim().split('\t').map(s=>s.trim());
+    const p = lines[li].trim().split('\t').map(s=>s.trim());
     if(p.length<2) continue;
     if(/suppliercode|المورد|اسم المورد|رقم|كود/i.test(p[0])) continue;
     let code='', name='', amount=null;
-    if(p.length>=3){
+    if (codeIdx>=0 || nameIdx>=0 || amtIdx>=0) {
+      code = codeIdx>=0 ? (p[codeIdx]||'') : '';
+      name = nameIdx>=0 ? (p[nameIdx]||'') : '';
+      amount = amtIdx>=0 ? parseFloat((p[amtIdx]||'').replace(/,/g,'')) : NaN;
+    } else if(p.length>=3){
       code = p[0]; name = p[1];
       amount = parseFloat(p[2].replace(/,/g,''));
     } else {
