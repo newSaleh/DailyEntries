@@ -433,8 +433,8 @@ function parseBranch(raw) {
     let name=null, amt=null;
 
     // صيغة 3: عدد[دحك] _ اسم    رقم (⬅️ أُزيلت مسبقاً)
-    let m = line.match(/^\d+\s*[دحك]\s*[_\-]\s*(.+?)\s{2,}([\d,\.]+)\s*$/);
-    if (!m) m = line.match(/⬅️\s*\d+\s*[دحك]\s*[_\-]\s*(.+?)\s{2,}([\d,\.]+)\s*$/);
+    let m = line.match(/^\d+\s*[دحك]+\s*[_\-]\s*(.+?)\s{2,}([\d,\.]+)\s*$/);
+    if (!m) m = line.match(/⬅️\s*\d+\s*[دحك]+\s*[_\-]\s*(.+?)\s{2,}([\d,\.]+)\s*$/);
     if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
 
     // صيغة 4: اسم/مبلغ/عددD  (المبلغ وسط) - بعد إزالة الإيموجي
@@ -445,19 +445,19 @@ function parseBranch(raw) {
 
     // صيغة 5: اسم-عدد[دحك](رقم) - بعد إزالة الإيموجي
     if (!name) {
-      m = line.match(/^(.+?)\s*-\s*\d*[دحك]?\s*[\(\[]([\d,\.]+)[\)\]]/);
+      m = line.match(/^(.+?)\s*-\s*\d*[دحك]*\s*[\(\[]([\d,\.]+)[\)\]]/);
       if (m) { name=m[1].trim(); amt=cleanAmt(m[2],true); }
     }
 
     // صيغة 2: اسم. عدد[دحك]⬅️رقم (بعد إزالة الإيموجي من البداية)
     if (!name) {
-      m = line.match(/^(.+?)\s*\.?\s*\d*[دحك]⬅️([\d,]+)/);
+      m = line.match(/^(.+?)\s*\.?\s*\d*[دحك]+⬅️([\d,]+)/);
       if (m) { name=m[1].trim().replace(/\.+$/,'').replace(/\s+/g,' '); amt=cleanAmt(m[2]); }
     }
 
     // صيغة 1: اسم عدد[دحك]/رقم (بعد إزالة ✅)
     if (!name) {
-      m = line.match(/^(.+?)\s*\d+[دحك]\s*[\/]([\d,]+)/);
+      m = line.match(/^(.+?)\s*\d+[دحك]+\s*[\/]([\d,]+)/);
       if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
     }
 
