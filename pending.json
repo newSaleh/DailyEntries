@@ -42,16 +42,5 @@
     "sysAmt": 672,
     "status": "diff",
     "resolved": false
-  },
-  {
-    "id": 1783821819016.7612,
-    "branch": "بريدة",
-    "date": "٢٧ محرم، ١٤٤٨ هـ",
-    "addedAt": "2026-07-12T02:03:39.016Z",
-    "name": "شركة نواعم الاطفال التجارية",
-    "code": "420",
-    "sysAmt": 4284,
-    "status": "sys",
-    "resolved": false
   }
 ]
