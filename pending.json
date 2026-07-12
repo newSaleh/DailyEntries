@@ -31,16 +31,5 @@
     "sysAmt": 4284,
     "status": "sys",
     "resolved": false
-  },
-  {
-    "id": 1783821819015.552,
-    "branch": "بريدة",
-    "date": "٢٧ محرم، ١٤٤٨ هـ",
-    "addedAt": "2026-07-12T02:03:39.015Z",
-    "name": "شركة العليمي بلازا",
-    "code": "232",
-    "sysAmt": 672,
-    "status": "diff",
-    "resolved": false
   }
 ]
