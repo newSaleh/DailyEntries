@@ -433,8 +433,8 @@ function parseBranch(raw) {
     let name=null, amt=null;
 
     // صيغة 3: عدد[دحك] _ اسم    رقم (⬅️ أُزيلت مسبقاً)
-    let m = line.match(/^\d+\s*[دحك]+\s*[_\-]\s*(.+?)\s{2,}([\d,\.]+)\s*$/);
-    if (!m) m = line.match(/⬅️\s*\d+\s*[دحك]+\s*[_\-]\s*(.+?)\s{2,}([\d,\.]+)\s*$/);
+    let m = line.match(/^\d+\s*[دحك]+\s*[_\-]\s*(.+?)\s+([\d,\.]+)\s*$/);
+    if (!m) m = line.match(/⬅️\s*\d+\s*[دحك]+\s*[_\-]\s*(.+?)\s+([\d,\.]+)\s*$/);
     if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
 
     // صيغة 4: اسم/مبلغ/عددD  (المبلغ وسط) - بعد إزالة الإيموجي
