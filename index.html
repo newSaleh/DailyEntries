@@ -445,7 +445,7 @@ function parseBranch(raw) {
 
     // صيغة 5: اسم-عدد[دحك](رقم) - بعد إزالة الإيموجي
     if (!name) {
-      m = line.match(/^(.+?)\s*-\s*\d*[دحك]*\s*[\(\[]([\d,\.]+)[\)\]]/);
+      m = line.match(/^(.+?)\s*-\s*[\dدحك]*\s*[\(\[]([\d,\.]+)[\)\]]/);
       if (m) { name=m[1].trim(); amt=cleanAmt(m[2],true); }
     }
 
