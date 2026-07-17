@@ -489,8 +489,8 @@ function parseSys(raw) {
   const header = lines[0].trim().split('\t').map(s=>s.trim());
   if (header.length>1) {
     header.forEach((h,i)=>{
-      if (codeIdx<0 && /رمز|كود|suppliercode/i.test(h)) codeIdx=i;
-      else if (nameIdx<0 && /اسم/i.test(h)) nameIdx=i;
+      if (nameIdx<0 && /اسم|name/i.test(h)) nameIdx=i;
+      else if (codeIdx<0 && /رمز|كود|مورد|code/i.test(h)) codeIdx=i;
       else if (amtIdx<0 && /مبلغ|amount|total/i.test(h)) amtIdx=i;
     });
     if (codeIdx>=0 || nameIdx>=0 || amtIdx>=0) dataStart=1;
