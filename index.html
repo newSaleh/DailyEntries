@@ -451,7 +451,7 @@ function parseBranch(raw) {
 
     // صيغة 2: اسم. عدد[دحك]⬅️رقم (بعد إزالة الإيموجي من البداية)
     if (!name) {
-      m = line.match(/^(.+?)\s*\.?\s*\d*[دحك]+⬅️([\d,]+)/);
+      m = line.match(/^(.+?)\s*\.?\s*\d*[دحك]+⬅️\s*([\d,]+)/);
       if (m) { name=m[1].trim().replace(/\.+$/,'').replace(/\s+/g,' '); amt=cleanAmt(m[2]); }
     }
 
