@@ -461,6 +461,12 @@ function parseBranch(raw) {
       if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
     }
 
+    // صيغة 6: اسم عدد[دحك]رقم (بلا فاصل / ناقص سهواً)
+    if (!name) {
+      m = line.match(/^(.+?)\s*\d+[دحك]+([\d,]+)\s*$/);
+      if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
+    }
+
     if (name && amt != null && amt > 0) {
       const key = name+'|'+amt;
       if (!seen.has(key)) { seen.add(key); rows.push({name, amount:amt}); }
