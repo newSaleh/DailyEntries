@@ -10,16 +10,5 @@
     "status": "diff",
     "resolved": false,
     "brAmt": 3552
-  },
-  {
-    "id": 1785225401993.7644,
-    "branch": "الفيحاء",
-    "date": "٢٨‏/٠٧‏/٢٠٢٦",
-    "addedAt": "2026-07-28T07:56:41.993Z",
-    "name": "مؤسسة محمد صالح بن بشر",
-    "code": "213",
-    "sysAmt": 5952,
-    "status": "sys",
-    "resolved": false
   }
 ]
