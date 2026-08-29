@@ -467,7 +467,20 @@ function parseBranch(raw) {
       if (m) { name=m[1].trim(); amt=cleanAmt(m[2]); }
     }
 
+    // صيغة 7: اسم رقم (بلا أي علامة وحدة أو فاصل — ملاذ أخير)
+    // تُستبعد أسطر الإجمالي/الملخص المعروفة (الموردين، السلي، المرتجعات، الاجمالي...)
+    // حتى لا تُقرأ كصف مورد وهمي بنفس شكل "اسم رقم"
+    if (!name) {
+      m = line.match(/^(.+?)\s+([\d,\.]+)\s*$/);
+      if (m) {
+        const nm = m[1].trim().replace(/\.+$/,'').trim();
+        const isSummary = /^(الموردين|السلي|المرتجعات)$/.test(nm) || /^ال?(ا|إ)جمالي/.test(nm);
+        if (!isSummary) { name=nm; amt=cleanAmt(m[2]); }
+      }
+    }
+
     if (name && amt != null && amt > 0) {
+      name = name.replace(/\.+$/,'').trim();
       const key = name+'|'+amt;
       if (!seen.has(key)) { seen.add(key); rows.push({name, amount:amt}); }
     }
