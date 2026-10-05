@@ -439,7 +439,7 @@ function parseBranch(raw) {
 
     // صيغة 4: اسم/مبلغ/عددD  (المبلغ وسط) - بعد إزالة الإيموجي
     if (!name) {
-      m = line.match(/^(.+?)\s*\/\s*([\d,\.]+)\s*\/\s*\d+\s*[dDدkKكح]/i);
+      m = line.match(/^(.+?)\s*\/\s*([\d,\.]+)\s*[\/\.]\s*\d+\s*[dDدkKكح]/i);
       if (m) { name=m[1].trim(); amt=cleanAmt(m[2],true); }
     }
 
